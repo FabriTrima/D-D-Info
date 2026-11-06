@@ -184,6 +184,12 @@ function ctl(coll,id,i,n){
     '<button class="btn small" data-act="mv" data-coll="'+coll+'" data-id="'+id+'" data-d="1" aria-label="Sposta giù"'+(i===n-1?' disabled':'')+'>Giù</button>'+
     '<button class="btn small danger" data-act="delitem" data-coll="'+coll+'" data-id="'+id+'">'+(armed===key?'Conferma eliminazione':'Elimina')+'</button></div>';
 }
+/* personaggio morto: casella per il Master, etichetta per i giocatori */
+function deadBar(coll,it,mid){
+  var d=!!it.dead,att=' data-coll="'+coll+'" data-id="'+it.id+'"'+(mid?' data-mid="'+mid+'"':'');
+  if(ISOWNER)return '<label class="deadchk" style="display:inline-flex;gap:6px;align-items:center;margin:6px 0;cursor:pointer"><input type="checkbox" data-act="togdead"'+att+(d?' checked':'')+'> Morto</label>';
+  return d?'<span class="secret" style="background:#555;margin:6px 0">† Morto</span>':'';
+}
 function houseBar(it){
   if(!ISOWNER)return '';
   var on=!!it.revealed;
@@ -199,7 +205,7 @@ function membersHtml(coll,it){
   var ms=(it.members||[]).filter(function(m){return ISOWNER||m.revealed});
   if(!ms.length)return '';
   return '<div class="mnote"><h4>Membri della gilda</h4>'+ms.map(function(m){
-    return '<div style="margin-top:10px"><b>'+esc(m.name)+'</b>'+(ISOWNER?' <span class="secret" style="margin:0 6px'+(m.revealed?';background:#2f6b3a':'')+'">'+(m.revealed?'Visibile ai giocatori':'Nascosto ai giocatori')+'</span><button class="btn small'+(m.revealed?' danger':' pri')+'" data-act="togmem" data-id="'+it.id+'" data-mid="'+m.id+'">'+(m.revealed?'Nascondi':'Rivela ai giocatori')+'</button>':'')+'<p>'+esc(m.text)+'</p></div>';
+    return '<div style="margin-top:10px"><b'+(m.dead?' style="text-decoration:line-through"':'')+'>'+esc(m.name)+'</b> '+deadBar('guilds',{id:it.id,dead:m.dead},m.id)+(ISOWNER?' <span class="secret" style="margin:0 6px'+(m.revealed?';background:#2f6b3a':'')+'">'+(m.revealed?'Visibile ai giocatori':'Nascosto ai giocatori')+'</span><button class="btn small'+(m.revealed?' danger':' pri')+'" data-act="togmem" data-id="'+it.id+'" data-mid="'+m.id+'">'+(m.revealed?'Nascondi':'Rivela ai giocatori')+'</button>':'')+'<p>'+esc(m.text)+'</p></div>';
   }).join('')+'</div>';
 }
 function membersEdit(coll,it){
@@ -239,7 +245,7 @@ function guildView(){
 
 /* foto */
 function photoSrc(p){return p?(p.url||(p.id?'/_blob/'+p.id:'')):''}
-function photoImg(it,cls){var s=photoSrc(it.photo);return s?'<img class="'+(cls||'ph')+'" src="'+esc(s)+'" alt="'+esc(it.name||it.house||'')+'" loading="lazy">':''}
+function photoImg(it,cls){var s=photoSrc(it.photo);return s?'<img class="'+(cls||'ph')+(it.dead?' dead':'')+'" src="'+esc(s)+'" alt="'+esc(it.name||it.house||'')+'" loading="lazy">':''}
 function photoCtl(coll,it){
   if(!edit||!ASSETS)return '';
   var has=!!photoSrc(it.photo);
@@ -282,7 +288,7 @@ fin.addEventListener('change',function(){
 function houseHtml(it,i,n){
   if(!edit){
     var img=photoImg(it,'pt')||'<div class="pt empty" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor">'+ICON.guild+'</svg></div>';
-    return '<article class="house">'+img+'<div class="hb">'+houseBar(it)+photoBar('council',it)+'<p class="hk">'+esc(it.house)+'</p><h3>'+esc(it.name)+'</h3><p class="hr">'+esc(it.role)+(it.age?' · '+esc(it.age)+' anni':'')+'</p>'+
+    return '<article class="house">'+img+'<div class="hb">'+houseBar(it)+photoBar('council',it)+'<p class="hk">'+esc(it.house)+'</p><h3>'+esc(it.name)+'</h3>'+deadBar('council',it)+'<p class="hr">'+esc(it.role)+(it.age?' · '+esc(it.age)+' anni':'')+'</p>'+
       (it.domain?'<p class="dom"><span>Dominio</span>'+esc(it.domain)+'</p>':'')+
       '<p class="ht">'+esc(it.text)+'</p>'+(it.motto?'<p class="motto">«'+esc(it.motto)+'»</p>':'')+
       (it.notes?'<div class="mnote"><h4>Note del Master</h4><p>'+esc(it.notes)+'</p></div>':'')+snHtml('council',it.id)+'</div></article>';
@@ -296,7 +302,7 @@ function houseHtml(it,i,n){
     '<div class="fld"><label for="cd-'+q+'">Dominio</label><input id="cd-'+q+'" data-b="'+b+'domain" value="'+esc(it.domain)+'"></div>'+
     '<div class="fld"><label for="ct-'+q+'">Descrizione</label><textarea id="ct-'+q+'" rows="4" data-b="'+b+'text">'+esc(it.text)+'</textarea></div>'+
     '<div class="fld"><label for="cm-'+q+'">Motto</label><input id="cm-'+q+'" data-b="'+b+'motto" value="'+esc(it.motto)+'"></div>'+
-    (ISOWNER?'<div class="fld"><label for="cx-'+q+'">Note del Master</label><textarea id="cx-'+q+'" rows="2" data-b="'+b+'notes" placeholder="Alleanze, rivalità, segreti...">'+esc(it.notes)+'</textarea></div>':'')+
+    (ISOWNER?'<div class="fld">'+deadBar('council',it)+'</div>':'')+(ISOWNER?'<div class="fld"><label for="cx-'+q+'">Note del Master</label><textarea id="cx-'+q+'" rows="2" data-b="'+b+'notes" placeholder="Alleanze, rivalità, segreti...">'+esc(it.notes)+'</textarea></div>':'')+
     photoField('council',it)+ctl('council',it.id,i,n)+'</div>';
 }
 function councilView(){
@@ -317,7 +323,7 @@ function memberHtml(it,i,n){
   if(!(edit&&ISOWNER)){
     var img=photoImg(it,'pt')||'<div class="pt empty" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor">'+FLAME+'</svg></div>';
     var meta=[it.race,it.age?it.age+' anni':''].filter(Boolean).join(' · ');
-    return '<article class="house">'+img+'<div class="hb">'+revBar(it)+(it.title?'<p class="hk">'+esc(it.title)+'</p>':'')+'<h3>'+esc(it.name)+'</h3>'+(meta?'<p class="hr">'+esc(meta)+'</p>':'')+
+    return '<article class="house">'+img+'<div class="hb">'+revBar(it)+(it.title?'<p class="hk">'+esc(it.title)+'</p>':'')+'<h3>'+esc(it.name)+'</h3>'+deadBar('custodi',it)+(meta?'<p class="hr">'+esc(meta)+'</p>':'')+
       '<p class="ht">'+esc(it.text)+'</p>'+
       (it.notes?'<div class="mnote"><h4>Note del Master</h4><p>'+esc(it.notes)+'</p></div>':'')+snHtml('custodi',it.id)+'</div></article>';
   }
@@ -328,7 +334,7 @@ function memberHtml(it,i,n){
     '<div class="row2"><div class="fld"><label for="kr-'+q+'">Stirpe</label><input id="kr-'+q+'" data-b="'+b+'race" value="'+esc(it.race)+'"></div>'+
     '<div class="fld"><label for="ka-'+q+'">Età</label><input id="ka-'+q+'" inputmode="numeric" style="width:6em" data-b="'+b+'age" value="'+esc(it.age)+'"></div></div>'+
     '<div class="fld"><label for="kx-'+q+'">Descrizione</label><textarea id="kx-'+q+'" rows="6" data-b="'+b+'text">'+esc(it.text)+'</textarea></div>'+
-    '<div class="fld"><label for="km-'+q+'">Note del Master</label><textarea id="km-'+q+'" rows="2" data-b="'+b+'notes" placeholder="Segreti, obiettivi, reazioni ai PG...">'+esc(it.notes)+'</textarea></div>'+
+    '<div class="fld">'+deadBar('custodi',it)+'</div><div class="fld"><label for="km-'+q+'">Note del Master</label><textarea id="km-'+q+'" rows="2" data-b="'+b+'notes" placeholder="Segreti, obiettivi, reazioni ai PG...">'+esc(it.notes)+'</textarea></div>'+
     photoField('custodi',it)+ctl('custodi',it.id,i,n)+'</div>';
 }
 /* note personali dei giocatori: restano nel browser, non vanno al server */
@@ -500,6 +506,7 @@ function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function act(el,e){
   var a=el.getAttribute('data-act'),id=el.getAttribute('data-id'),coll=el.getAttribute('data-coll');
   if(a==='tab'){location.hash=id;return}
+  if(a==='togdead'){if(!ISOWNER)return;var dt=coll==='guilds'?(byId('guilds',id).members||[]).filter(function(x){return x.id===el.getAttribute('data-mid')})[0]:byId(coll,id);if(!dt)return;dt.dead=!dt.dead;setDirty();render();save();return}
   if(a==='notemode'){noteMode=!noteMode;render();return}
   if(a==='pnadd'){PN.unshift({id:uid('n'),title:'',text:''});pnSave();render();return}
   if(a==='pndel'){if(armed==='pn:'+id){PN=PN.filter(function(n){return n.id!==id});armed=null;pnSave()}else armed='pn:'+id;render();return}

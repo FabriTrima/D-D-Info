@@ -223,3 +223,5 @@ h1{font-family:var(--f-display);font-size:clamp(2.2rem,7vw,3.9rem);letter-spacin
 .bar .in{max-width:1180px;margin:0 auto;display:flex;gap:10px 14px;flex-wrap:wrap;align-items:center}
 .bar .st{flex:1;min-width:200px;font-size:.95rem}
 .bar .st.err{color:#ffb08a}
+
+img.dead{filter:grayscale(1)}
