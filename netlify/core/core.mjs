@@ -9,7 +9,10 @@ export function publicView(S) {
   const P = JSON.parse(JSON.stringify(S));
   for (const c of NCOLL) {
     P[c] = (P[c] || []).filter((it) => !(it.hid && !it.revealed));
-    P[c].forEach((it) => { delete it.notes; delete it.hid; delete it.revealed; });
+    P[c].forEach((it) => {
+      if (!(c === 'guilds' && it.notesRevealed)) delete it.notes;
+      delete it.hid; delete it.revealed; delete it.notesRevealed;
+    });
   }
   P.custodi = (P.custodi || []).filter((m) => m.revealed);
   P.custodi.forEach((m) => { delete m.notes; delete m.revealed; });

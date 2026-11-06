@@ -184,14 +184,19 @@ function ctl(coll,id,i,n){
     '<button class="btn small" data-act="mv" data-coll="'+coll+'" data-id="'+id+'" data-d="1" aria-label="Sposta giù"'+(i===n-1?' disabled':'')+'>Giù</button>'+
     '<button class="btn small danger" data-act="delitem" data-coll="'+coll+'" data-id="'+id+'">'+(armed===key?'Conferma eliminazione':'Elimina')+'</button></div>';
 }
+function memBar(c,it){
+  if(!ISOWNER||c!=='guilds')return '';
+  var on=!!it.notesRevealed;
+  return '<div class="ctl" style="margin:0 0 12px;align-items:center"><span class="secret" style="margin:0'+(on?';background:#2f6b3a':'')+'">'+(on?'Membri visibili ai giocatori':'Membri nascosti ai giocatori')+'</span><button class="btn small'+(on?' danger':' pri')+'" data-act="togmem" data-coll="guilds" data-id="'+it.id+'">'+(on?'Nascondi i membri':'Mostra i membri ai giocatori')+'</button></div>';
+}
 function itemHtml(coll,it,i,n){
   if(!edit){
-    return '<div class="card">'+hidBar(coll,it)+photoImg(it)+'<h3>'+esc(it.name)+'</h3><p>'+esc(it.text)+'</p>'+(coll==='society'&&it.id==='s2'&&S.council.length?'<p><button class="btn small" data-act="tab" data-id="consiglio">Vedi i membri del Consiglio</button></p>':'')+(it.notes?'<div class="mnote"><h4>Note del Master</h4><p>'+esc(it.notes)+'</p></div>':'')+'</div>';
+    return '<div class="card">'+hidBar(coll,it)+memBar(coll,it)+photoImg(it)+'<h3>'+esc(it.name)+'</h3><p>'+esc(it.text)+'</p>'+(coll==='society'&&it.id==='s2'&&S.council.length?'<p><button class="btn small" data-act="tab" data-id="consiglio">Vedi i membri del Consiglio</button></p>':'')+(it.notes?'<div class="mnote"><h4>'+(coll==='guilds'?'Membri della gilda':'Note del Master')+'</h4><p>'+esc(it.notes)+'</p></div>':'')+'</div>';
   }
   var b=coll+'|'+it.id+'|';
-  return '<div class="card dark">'+hidBar(coll,it)+'<div class="fld"><label for="n-'+it.id+'">Nome</label><input id="n-'+it.id+'" data-b="'+b+'name" value="'+esc(it.name)+'"></div>'+
+  return '<div class="card dark">'+hidBar(coll,it)+memBar(coll,it)+'<div class="fld"><label for="n-'+it.id+'">Nome</label><input id="n-'+it.id+'" data-b="'+b+'name" value="'+esc(it.name)+'"></div>'+
     '<div class="fld"><label for="t-'+it.id+'">Descrizione</label><textarea id="t-'+it.id+'" rows="3" data-b="'+b+'text">'+esc(it.text)+'</textarea></div>'+
-    (ISOWNER?'<div class="fld"><label for="m-'+it.id+'">Note del Master</label><textarea id="m-'+it.id+'" rows="2" data-b="'+b+'notes" placeholder="Agganci, PNG, segreti...">'+esc(it.notes)+'</textarea></div>':'')+photoField(coll,it)+ctl(coll,it.id,i,n)+'</div>';
+    (ISOWNER?'<div class="fld"><label for="m-'+it.id+'">'+(coll==='guilds'?'Membri della gilda (e note)':'Note del Master')+'</label><textarea id="m-'+it.id+'" rows="2" data-b="'+b+'notes" placeholder="Agganci, PNG, segreti...">'+esc(it.notes)+'</textarea></div>':'')+photoField(coll,it)+ctl(coll,it.id,i,n)+'</div>';
 }
 function societyView(){
   var n=S.society.length;
@@ -452,6 +457,7 @@ function act(el,e){
   if(a==='csel'){csel=id;render();return}
   if(a==='photo'){if(uploading||!ASSETS)return;photoTarget={coll:coll,id:id};fin.value='';fin.click();return}
   if(a==='rmphoto'){var pit=byId(coll,id);if(pit){pit.photo=null;if(coll==='custodi')wMember(pit,true);else if(pit.hid)wHid(coll,pit,true);else setDirty();render()}return}
+  if(a==='togmem'){var mi=byId(coll,id);if(!mi||!ISOWNER)return;mi.notesRevealed=!mi.notesRevealed;setDirty();render();save();return}
   if(a==='revealh'){var hit=byId(coll,id);if(!hit||!ISOWNER||!hit.hid)return;hit.revealed=!hit.revealed;setDirty();render();save();return}
   if(a==='reveal'){var rit=byId('custodi',id);if(!rit||!ISOWNER)return;rit.revealed=!rit.revealed;setDirty();render();save();return}
   if(a==='save'){save();return}
