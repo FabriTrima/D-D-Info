@@ -1,0 +1,911 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Karak-Dûran</title><meta name="claude:viewport-fit-sides" content="cover"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,700;1,400&family=Alegreya+Sans+SC:wght@500;700&family=Cinzel:wght@500;700&display=swap"><style id="app-style">
+/* Layout: sezione della montagna a sinistra, pannello di pergamena con il dettaglio a destra; società e gilde in schede a scala. Look unico: pietra blu notte, oro e brace di forgia. */
+:root{
+  --ink-0:#0d1420;
+  --ink-1:#142033;
+  --ink-2:#1c2b44;
+  --line:#33445f;
+  --fg:#efe6d2;
+  --muted:#a9a495;
+  --gold:#d8a94a;
+  --ember:#f08436;
+  --ember-deep:#a8421a;
+  --water:#58b4e8;
+  --holy:#cfe9ff;
+  --stone-hi:#9fb0c8;
+  --rock-a:#55657f;
+  --rock-b:#2b374b;
+  --rock-c:#172030;
+  --parch:#e9ddc3;
+  --parch-2:#dccfae;
+  --parch-field:#f4ecd8;
+  --parch-ink:#2b2218;
+  --parch-muted:#6a5a43;
+  --parch-line:#b9a57e;
+  --f-display:'Cinzel',Georgia,'Times New Roman',serif;
+  --f-body:'Alegreya',Georgia,'Times New Roman',serif;
+  --f-label:'Alegreya Sans SC','Alegreya',Georgia,serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--ink-0)}
+body{
+  background-color:var(--ink-0);
+  background-image:radial-gradient(900px 480px at 78% -8%,#1f3050 0,transparent 62%);
+  background-repeat:no-repeat;
+  color:var(--fg);
+  font-family:var(--f-body);
+  font-size:17px;
+  line-height:1.5;
+  padding-block:20px 104px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+.wrap{max-width:1180px;margin:0 auto}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{margin:0;font-weight:700;text-wrap:balance}
+
+/* intestazione */
+.hdr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,340px);gap:14px 28px;align-items:end;padding-bottom:20px;border-bottom:1px solid var(--line)}
+h1{font-family:var(--f-display);font-size:clamp(2.2rem,7vw,3.9rem);letter-spacing:.02em;color:var(--gold);line-height:1.05}
+.sub{font-family:var(--f-display);font-weight:500;letter-spacing:.24em;text-transform:uppercase;font-size:clamp(.8rem,2.4vw,1.05rem);margin-top:6px}
+.tag{font-style:italic;color:var(--muted);max-width:54ch;margin:10px 0 0}
+.city{border-left:1px solid var(--line);padding-left:18px}
+.city h2{font-family:var(--f-display);font-size:1.15rem;color:var(--fg);letter-spacing:.04em}
+.city p{margin:4px 0 0;color:var(--muted)}
+.hdr input,.hdr textarea{width:100%;background:var(--ink-2);border:1px solid var(--line);padding:8px 10px;color:var(--fg)}
+.hdr input.in-h1{font-family:var(--f-display);font-size:1.7rem;color:var(--gold);font-weight:700}
+.hdr .stack{display:grid;gap:8px}
+@media(max-width:760px){.hdr{grid-template-columns:minmax(0,1fr)}.city{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:12px}}
+
+/* schede */
+.tabs{display:flex;gap:2px;flex-wrap:wrap;align-items:flex-end;margin:16px 0 22px;border-bottom:1px solid var(--line)}
+.tab{font-family:var(--f-label);letter-spacing:.14em;text-transform:uppercase;font-weight:700;font-size:.92rem;padding:10px 16px;color:var(--muted);background:none;border:0;border-bottom:3px solid transparent;cursor:pointer;margin-bottom:-1px}
+.tab:hover{color:var(--fg)}
+.tab[aria-selected=true]{color:var(--gold);border-bottom-color:var(--ember)}
+.tabs .sp{flex:1}
+.btn{font-family:var(--f-label);letter-spacing:.1em;text-transform:uppercase;font-weight:700;font-size:.82rem;padding:9px 14px;border:1px solid var(--line);background:var(--ink-2);color:var(--fg);cursor:pointer;border-radius:3px}
+.btn:hover{border-color:var(--gold)}
+.btn.pri{background:var(--ember);border-color:var(--ember);color:#1a0c04}
+.btn.pri:hover{background:#ff9a52}
+.btn.pri[disabled]{opacity:.55;cursor:wait}
+.btn.danger{border-color:var(--ember-deep);color:#ffb08a}
+.parch .btn.danger{background:transparent;color:var(--ember-deep);border-color:var(--ember-deep)}
+.btn.small{padding:5px 9px;font-size:.74rem}
+.btn.on{border-color:var(--ember);color:var(--ember)}
+.tabs .btn{margin-bottom:6px}
+
+/* mappa */
+.mapgrid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:22px;align-items:start}
+@media(max-width:900px){.mapgrid{grid-template-columns:minmax(0,1fr)}}
+.mapcard{background:var(--ink-1);border:1px solid var(--line);padding:8px;outline:1px solid var(--line);outline-offset:-5px}
+.mapcard svg{display:block;width:100%;height:auto}
+.mapcard svg.editing .pin{cursor:grab;touch-action:none}
+.band{fill:rgba(0,0,0,0);cursor:pointer}
+.band:hover{fill:rgba(240,132,54,.09)}
+.band.on{fill:rgba(240,132,54,.15)}
+.rl{font-family:var(--f-label);font-size:12.5px;font-weight:700;letter-spacing:.07em;fill:var(--muted);cursor:pointer}
+.rl.on{fill:var(--ember)}
+.rl.sm{font-size:10.5px;font-weight:500}
+.pin{cursor:pointer;outline:none}
+.pin .pbase{fill:var(--ink-1);stroke:currentColor;stroke-width:2}
+.pin:hover .pbase,.pin:focus-visible .pbase{fill:var(--ink-2)}
+.pin.on .pbase{fill:var(--ink-2);stroke-width:3}
+.pin .ring{fill:none;stroke:var(--gold);stroke-width:2;opacity:0}
+.pin.on .ring{opacity:1}
+.pin:focus-visible .ring{opacity:1;stroke:var(--fg)}
+.pin .sec{fill:none;stroke:var(--ember);stroke-width:1.5;stroke-dasharray:3 3}
+.pin.dim{opacity:.22}
+.plabel rect{fill:var(--parch);stroke:var(--parch-line)}
+.plabel text{fill:var(--parch-ink);font-family:var(--f-display);font-size:12px;font-weight:700;text-anchor:middle}
+.glow{transform-origin:450px 340px}
+@media(prefers-reduced-motion:no-preference){.glow{animation:pulse 4.5s ease-in-out infinite}}
+@keyframes pulse{0%,100%{opacity:.85}50%{opacity:1}}
+.scale text{font-family:var(--f-label);font-size:9px;fill:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.lg{display:inline-flex;align-items:center;gap:7px;font-family:var(--f-label);font-weight:500;font-size:.88rem;letter-spacing:.04em;padding:5px 10px 5px 8px;background:var(--ink-1);border:1px solid var(--line);cursor:pointer;border-radius:3px}
+.lg:hover{border-color:var(--gold)}
+.lg[aria-pressed=true]{border-color:var(--ember);background:var(--ink-2)}
+.lg svg{width:16px;height:16px;flex:none}
+.lg .n{color:var(--muted);font-variant-numeric:tabular-nums}
+.side{position:sticky;top:12px}
+@media(max-width:900px){.side{position:static}}
+
+/* pergamena */
+.parch{background:var(--parch);color:var(--parch-ink);border:1px solid var(--parch-line);padding:22px 22px 24px;box-shadow:inset 0 0 0 5px var(--parch),inset 0 0 0 6px var(--parch-line);background-image:linear-gradient(180deg,rgba(255,255,255,.35),rgba(120,90,40,.08))}
+.parch h2{font-family:var(--f-display);font-size:1.55rem;line-height:1.15;color:var(--parch-ink)}
+.parch h3{font-family:var(--f-label);letter-spacing:.12em;text-transform:uppercase;font-size:.82rem;color:var(--parch-muted)}
+.kick{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:var(--f-label);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:.78rem;color:var(--parch-muted);margin:0 0 8px}
+.tchip{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--ink-1)}
+.tchip svg{width:16px;height:16px}
+.desc{margin:10px 0 0;white-space:pre-line}
+.secret{display:inline-block;margin:10px 0 0;padding:2px 10px;font-family:var(--f-label);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:.74rem;color:#fff;background:var(--ember-deep)}
+.mnote{margin-top:16px;padding-top:12px;border-top:1px dashed var(--parch-line)}
+.mnote p{margin:4px 0 0;white-space:pre-line}
+.zl{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0;padding:0;list-style:none}
+.zl button,.chip{font-family:var(--f-body);font-size:.95rem;padding:4px 10px;background:var(--parch-field);border:1px solid var(--parch-line);color:var(--parch-ink);cursor:pointer;border-radius:3px}
+.zl button:hover,.chip:hover{border-color:var(--ember-deep)}
+.hint{font-size:.9rem;color:var(--parch-muted);margin:10px 0 14px;font-style:italic}
+
+/* campi */
+.fld{display:grid;gap:4px;margin:0 0 12px}
+.fld label,.chk{font-family:var(--f-label);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:.74rem}
+.fld input,.fld select,.fld textarea{width:100%;padding:8px 10px;border:1px solid var(--parch-line);background:var(--parch-field);color:var(--parch-ink);border-radius:2px}
+.fld textarea{min-height:5.2em;resize:vertical;field-sizing:content}
+.chk{display:flex;align-items:center;gap:8px;margin:0 0 12px}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:end}
+.dark .fld label{color:var(--muted)}
+.dark .fld input,.dark .fld textarea{background:var(--ink-2);border-color:var(--line);color:var(--fg)}
+.dark .fld input:focus-visible,.dark .fld textarea:focus-visible{outline-color:var(--gold)}
+
+/* elenco luoghi */
+.sech{font-family:var(--f-display);font-size:1.25rem;color:var(--gold);letter-spacing:.04em;margin:30px 0 12px}
+.lv{display:grid;grid-template-columns:minmax(120px,190px) minmax(0,1fr);gap:8px 18px;padding:10px 0;border-top:1px solid var(--line);align-items:start}
+.lv>button{text-align:left;background:none;border:0;padding:0;cursor:pointer;font-family:var(--f-label);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:.8rem;color:var(--muted)}
+.lv>button:hover,.lv>button.on{color:var(--ember)}
+.lv ul{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.lv li button{display:inline-flex;align-items:center;gap:7px;padding:5px 11px 5px 8px;background:var(--ink-1);border:1px solid var(--line);cursor:pointer;font-size:.97rem;border-radius:3px}
+.lv li button:hover{border-color:var(--gold)}
+.lv li button.on{border-color:var(--ember);background:var(--ink-2)}
+.lv li button svg{width:15px;height:15px;flex:none}
+.lv .none{color:var(--muted);font-style:italic}
+@media(max-width:600px){.lv{grid-template-columns:minmax(0,1fr)}}
+
+/* società */
+.cols{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:28px;align-items:start}
+@media(max-width:900px){.cols{grid-template-columns:minmax(0,1fr)}}
+.lead{margin:0 0 20px;max-width:62ch}
+.ladder{list-style:none;margin:0;padding:0}
+.tier{position:relative;padding:0 0 18px 38px}
+.tier::before{content:"";position:absolute;left:11px;top:14px;bottom:-14px;width:2px;background:var(--line)}
+.tier:last-child::before{display:none}
+.tier::after{content:"";position:absolute;left:5px;top:8px;width:14px;height:14px;background:var(--ember);transform:rotate(45deg)}
+.card{background:var(--ink-1);border:1px solid var(--line);outline:1px solid var(--line);outline-offset:-5px;padding:16px 18px}
+.card h3{font-family:var(--f-display);font-size:1.15rem;color:var(--gold);letter-spacing:.03em}
+.card p{margin:6px 0 0}
+.card .mnote{border-top-color:var(--line)}
+.card .mnote h4{margin:0;font-family:var(--f-label);letter-spacing:.12em;text-transform:uppercase;font-size:.76rem;color:var(--gold)}
+.ctl{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.guilds{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:14px}
+.guilds .card{height:100%}
+.life p{margin:10px 0 0}
+
+/* foto e consiglio */
+.ph{display:block;width:100%;max-height:260px;object-fit:cover;border:1px solid var(--line);margin:0 0 12px;background:var(--ink-2)}
+.parch .ph{border-color:var(--parch-line)}
+.fld .fl{font-family:var(--f-label);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:.74rem}
+.dark .fld .fl{color:var(--muted)}
+.council{list-style:none;margin:0;padding:0;display:grid;gap:16px;max-width:980px}
+.house{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr);gap:20px;background:var(--ink-1);border:1px solid var(--line);outline:1px solid var(--line);outline-offset:-5px;padding:20px}
+@media(max-width:600px){.house{grid-template-columns:minmax(0,1fr)}.house .pt{max-width:200px}}
+.pt{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;border:1px solid var(--line);background:var(--ink-2)}
+.pt.empty{display:grid;place-items:center;color:var(--line)}
+.pt.empty svg{width:46%;height:auto}
+.hb{min-width:0}
+.hk{margin:0;font-family:var(--f-label);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:.8rem;color:var(--ember)}
+.house h3{font-family:var(--f-display);font-size:1.4rem;color:var(--gold);margin:2px 0 0;letter-spacing:.02em}
+.hr{margin:2px 0 0;color:var(--muted);font-variant-numeric:tabular-nums}
+.dom{margin:12px 0 0}
+.dom span{font-family:var(--f-label);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:.76rem;color:var(--gold);margin-right:6px}
+.ht{margin:8px 0 0;max-width:62ch}
+.motto{margin:12px 0 0;font-style:italic;font-size:1.1rem}
+.house .mnote{border-top-color:var(--line)}
+.house .mnote h4{margin:0;font-family:var(--f-label);letter-spacing:.12em;text-transform:uppercase;font-size:.76rem;color:var(--gold)}
+.house .mnote p{margin:4px 0 0;white-space:pre-line}
+
+/* cittadella reale */
+.cit{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:24px;align-items:start}
+@media(max-width:900px){.cit{grid-template-columns:minmax(0,1fr)}}
+.cmap{margin:0;padding:8px;background:var(--ink-1);border:1px solid var(--line);outline:1px solid var(--line);outline-offset:-5px}
+.cmi{position:relative}
+.cmi img{display:block;width:100%;height:auto}
+.cmap-empty{min-height:320px;display:grid;place-items:center;text-align:center;color:var(--muted);font-style:italic;padding:16px}
+.cpin{position:absolute;transform:translate(-50%,-50%);width:28px;height:28px;border-radius:50%;border:2px solid var(--gold);background:var(--ink-1);color:var(--gold);font-family:var(--f-label);font-weight:700;font-size:.85rem;cursor:pointer;padding:0;display:grid;place-items:center;font-variant-numeric:tabular-nums;box-shadow:0 1px 6px rgba(0,0,0,.6)}
+.cpin:hover{background:var(--ink-2)}
+.cpin.on{background:var(--ember);border-color:var(--fg);color:#1a0c04;z-index:2}
+.cmap.editing .cpin{cursor:grab;touch-action:none}
+.alist{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:6px}
+.ai{display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;align-items:start;width:100%;text-align:left;padding:8px 12px;background:var(--ink-1);border:1px solid var(--line);cursor:pointer;border-radius:3px}
+.ai:hover{border-color:var(--gold)}
+.ai.on{border-color:var(--ember);background:var(--ink-2)}
+.ai .num{width:24px;height:24px;border-radius:50%;border:1px solid var(--gold);display:grid;place-items:center;font-family:var(--f-label);font-weight:700;font-size:.8rem;color:var(--gold)}
+.ai b{display:block;font-weight:700}
+.ai .t{display:block;color:var(--muted);font-size:.95rem}
+.cit2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:18px;margin-top:28px}
+.dia{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+.dia li{position:relative;padding-left:20px}
+.dia li::before{content:"";position:absolute;left:3px;top:.55em;width:7px;height:7px;background:var(--ember);transform:rotate(45deg)}
+
+/* barra di salvataggio */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--ink-2);border-top:1px solid var(--gold);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.bar[hidden]{display:none}
+.bar .in{max-width:1180px;margin:0 auto;display:flex;gap:10px 14px;flex-wrap:wrap;align-items:center}
+.bar .st{flex:1;min-width:200px;font-size:.95rem}
+.bar .st.err{color:#ffb08a}
+</style><div id="app"></div><script type="application/json" id="state">{"title": "Karak-Dûran", "subtitle": "La Roccia Eterna", "tagline": "Nel cuore della montagna, dove la pietra incontra il fuoco, i nani forgiano il domani.", "city": "La città dei nani", "cityText": "Una fortezza scavata nella montagna, tra tradizione, ingegno e fuoco.", "motto": "Forgiamo ciò che la montagna ci dona", "societyIntro": "I Karak-Dûran sono un popolo orgoglioso, disciplinato e profondamente legato alla propria terra. La loro società è organizzata in una rigida gerarchia, guidata dal Re-Thane e dal Consiglio delle Pietre, che governa la città in nome della tradizione e del bene comune.", "life": "La vita dei nani è scandita dal lavoro, dalla devozione alla famiglia e dal rispetto per la terra e gli antenati. Le feste sono rare ma solenni, legate ai cicli della montagna e alla memoria degli eroi caduti.", "levels": [{"id": "lv1", "name": "Cittadella Reale", "y0": 24, "y1": 130}, {"id": "lv2", "name": "Quartieri Nobili", "y0": 130, "y1": 200}, {"id": "lv3", "name": "Quartieri Popolari", "y0": 200, "y1": 290}, {"id": "lv4", "name": "La Forgia", "y0": 290, "y1": 390}, {"id": "lv5", "name": "Gallerie Minerarie", "y0": 390, "y1": 460}, {"id": "lv6", "name": "Livelli Inferiori (acquiferi)", "y0": 460, "y1": 552}], "locations": [{"id": "cittadella", "name": "Cittadella Reale", "type": "building", "x": 450, "y": 80, "desc": "Il livello più alto di Karak-Dûran, in cima alla montagna.", "secret": false, "photo": {"id": "f005b1594b0e27e97c0f33c9df0427b4", "url": "/_blob/f005b1594b0e27e97c0f33c9df0427b4"}}, {"id": "nobili", "name": "Quartieri Nobili", "type": "residential", "x": 365, "y": 183, "desc": "Le residenze della nobiltà, appena sotto la Cittadella Reale.", "secret": false}, {"id": "tempio", "name": "Tempio di Moradin", "type": "sacred", "x": 415, "y": 114, "desc": "Luogo sacro nei livelli alti della città.", "secret": false}, {"id": "popolari", "name": "Quartieri Popolari", "type": "residential", "x": 375, "y": 257, "desc": "Dove il popolo vive e lavora, a metà della montagna.", "secret": false}, {"id": "laboratori", "name": "Laboratori e Officine", "type": "industrial", "x": 590, "y": 335, "desc": "Laboratori e officine dove nascono i costrutti, accanto alla Forgia.", "secret": false}, {"id": "afgoria", "name": "Moradîn Az-Khal (Forgia)", "type": "industrial", "x": 451, "y": 338, "desc": "La Moradin Az-Khal è il cuore pulsante della civiltà nanica. Qui vengono forgiati non solo armi e armature, le macchine da guerra e gli strumenti arcani.\n", "secret": false, "photo": {"id": "d41e44e851bbaed4e5b832b1d3e97c09", "url": "/_blob/d41e44e851bbaed4e5b832b1d3e97c09"}}, {"id": "ingegneri", "name": "Gilda degli Ingegneri", "type": "guild", "x": 303, "y": 337, "desc": "Sede della Gilda degli Ingegneri: strutture, macchine e innovazioni.", "secret": false}, {"id": "biblioteca", "name": "Biblioteca di Thargrim", "type": "building", "x": 520, "y": 185, "desc": "La biblioteca di Thargrim, sotto l'Afgoria.", "secret": false}, {"id": "gallerie", "name": "Gallerie Minerarie", "type": "industrial", "x": 515, "y": 457, "desc": "Le gallerie di estrazione, di cui la Gilda dei Minatori cura la sicurezza.", "secret": false}, {"id": "porta", "name": "Porta Principale", "type": "gate", "x": 250, "y": 440, "desc": "L'ingresso principale della città.", "secret": false}, {"id": "abitazioni", "name": "Abitazioni dei Clan", "type": "residential", "x": 515, "y": 253, "desc": "Le case dei clan, nei livelli inferiori.", "secret": false}, {"id": "pozzi", "name": "Pozzi dell'Acqua Sacra", "type": "well", "x": 450, "y": 510, "desc": "Sorgenti sacre nei livelli più profondi, dove scorrono gli acquiferi.", "secret": false}], "society": [{"id": "s1", "name": "Il Re-Thane", "text": "Sovrano della città, simbolo dell'unità nanica. Il suo potere è sacro e viene trasmesso per discendenza o per scelta del Consiglio delle Pietre.", "photo": {"id": "86a5eeff0acce12a96d08a6f863dbbc7", "url": "/_blob/86a5eeff0acce12a96d08a6f863dbbc7"}}, {"id": "s2", "name": "Il Consiglio delle Pietre", "text": "Nobiltà clanica che governa e prende le decisioni principali. È composto dai capi dei grandi clan e dai maestri delle arti arcane e metallurgiche.", "photo": {"id": "99cee42f32a7e0e547d82a43708462cf", "url": "/_blob/99cee42f32a7e0e547d82a43708462cf"}}, {"id": "s3", "name": "Le Gilde", "text": "Ogni Gilda è specializzata in un settore. Le Gilde mantengono una forte autonomia, ma sono uniti dalla fedeltà al Re-Thane e alla città.", "photo": {"id": "5d5d17ac8b27650eaf822f423894a7ce", "url": "/_blob/5d5d17ac8b27650eaf822f423894a7ce"}}, {"id": "s5", "name": "Il Popolo", "text": "La maggior parte dei nani vive nei quartieri inferiori e si dedica al lavoro, alla difesa e alla manutenzione della città."}], "guilds": [{"id": "g1", "name": "Gilda dei Forgiatori", "text": "Responsabile della produzione di metalli, armi e costrutti.", "photo": {"id": "bde9ebc5e2e7b705ee456fc9a1762600", "url": "/_blob/bde9ebc5e2e7b705ee456fc9a1762600"}}, {"id": "g2", "name": "Gilda degli Ingegneri", "text": "Si occupa delle strutture, delle macchine e delle innovazioni.", "photo": {"id": "69faca506f0e4bcc9ca58fbc35f0f14f", "url": "/_blob/69faca506f0e4bcc9ca58fbc35f0f14f"}}, {"id": "g3", "name": "Gilda dei Minatori", "text": "Gestisce l'estrazione e la sicurezza delle gallerie.", "photo": {"id": "8c3f8d8798a1089120b5b2c92f48f989", "url": "/_blob/8c3f8d8798a1089120b5b2c92f48f989"}}, {"id": "g4", "name": "Gilda dei Maestri Arcani", "text": "Studia e applica l'arte della runa e dell'incantamento.", "photo": {"id": "6605fee4d236e02156ce07265ba783a7", "url": "/_blob/6605fee4d236e02156ce07265ba783a7"}}, {"id": "g5", "name": "Gilda dei Mercanti", "text": "Si occupa di scambi, approvvigionamenti e relazioni con l'esterno.", "photo": {"id": "deb1935017d7fd56df8191b97ba5ff81", "url": "/_blob/deb1935017d7fd56df8191b97ba5ff81"}}, {"id": "g6", "name": "Gilda dei Custodi", "text": "Mantiene l'ordine, la sicurezza e la tradizione.", "photo": {"id": "e023458bd3c00da8739a14261d3bc0d4", "url": "/_blob/e023458bd3c00da8739a14261d3bc0d4"}}], "councilIntro": "Nobiltà clanica che governa e prende le decisioni principali. È composto dai capi dei grandi clan e dai maestri delle arti arcane e metallurgiche.", "council": [{"id": "c1", "house": "Casata Khar-Thûn", "name": "Lord Gundar Khar-Thûn", "role": "Capocasata", "age": "263", "domain": "fortezze e difesa militare", "text": "È la casata che controlla le principali guarnigioni, le mura esterne e le difese montane. Gundar è un comandante severo, convinto che la sicurezza venga prima di qualsiasi interesse commerciale.", "motto": "La montagna non arretra", "photo": {"id": "c60b5266f0edef2e01731ac6f44405f8", "url": "/_blob/c60b5266f0edef2e01731ac6f44405f8"}}, {"id": "c2", "house": "Casata Dûr-Malak", "name": "Lady Helvra Dûr-Malak", "role": "Capocasata", "age": "231", "domain": "commercio, tesoreria e relazioni esterne", "text": "Una delle famiglie più ricche della montagna. Gestisce antichi accordi commerciali e possiede quote in numerose attività minerarie e manifatturiere. Helvra è una diplomatica formidabile, capace di ottenere concessioni senza mai alzare la voce.", "motto": "Ogni promessa ha il suo peso", "photo": {"id": "1cc17f2c6568da0e8f6c88647a9777df", "url": "/_blob/1cc17f2c6568da0e8f6c88647a9777df"}}, {"id": "c3", "house": "Casata Mor-Khaz", "name": "Lord Baelgor Mor-Khaz", "role": "Capocasata", "age": "298", "domain": "religione, tradizioni e diritto ancestrale", "text": "È una delle famiglie più antiche. I suoi membri hanno storicamente ricoperto incarichi religiosi e giuridici. Baelgor è un tradizionalista convinto che ogni cambiamento debba essere approvato dalla volontà di Moradin.", "motto": "Ciò che è stato consacrato non si dimentica", "photo": {"id": "5beb1dc4b66294d47c324ad720a32839", "url": "/_blob/5beb1dc4b66294d47c324ad720a32839"}}, {"id": "c4", "house": "Casata Vor-Khad", "name": "Lady Brynja Vor-Khad", "role": "Capocasata", "age": "204", "domain": "esercito, addestramento e spedizioni", "text": "Famiglia di tradizione guerriera, famosa per aver fornito generazioni di ufficiali e comandanti. Brynja è una combattente pragmatica, poco interessata alle dispute aristocratiche, ma estremamente influente nelle questioni militari.", "motto": "Il ferro si piega, noi no", "photo": {"id": "365a487884fc53c864e39f163ca8e128", "url": "/_blob/365a487884fc53c864e39f163ca8e128"}}, {"id": "c5", "house": "Casata Azh-Mor", "name": "Lord Tharvok Azh-Mor", "role": "Capocasata", "age": "276", "domain": "conoscenza, magia e ricerca", "text": "La casata ha prodotto alcuni dei più grandi studiosi nanici. Detiene biblioteche private, archivi runici e antichi trattati di magia. Tharvok è un uomo enigmatico, convinto che alcune conoscenze debbano rimanere accessibili soltanto a pochi eletti.", "motto": "La conoscenza è il fuoco che non si spegne", "photo": {"id": "485d4326dff3a51ee2a4a6ffb1ecc59a", "url": "/_blob/485d4326dff3a51ee2a4a6ffb1ecc59a"}}], "citTitle": "La Cittadella Reale", "citIntro": "La Cittadella Reale di Karak-Dûran sorge nel punto più alto della città, incarnando il potere, la tradizione e la memoria dei nani. Qui risiede il Re-Thane e si riunisce il Consiglio delle Pietre in una serie di sale monumentali, ricche di simboli e storia.", "citFeatures": "Architettura monumentale in granito e pietra nera\nSimboli delle casate e di Moradin ovunque\nIlluminazione con bracieri e lampade runiche\nAccesso sorvegliato e riservato", "citAtmos": "Ambiente solenne e imponente, permeato di storia\nAtmosfera di ordine, disciplina e tradizione\nSimboli runici e decorazioni in ogni sala\nPresenza costante di guardie e servitori reali", "citmap": [{"id": "m1", "name": "Pianta della Cittadella Reale", "photo": {"id": "6272bccba847d3bbc76eb0f1736ff6dd", "url": "/_blob/6272bccba847d3bbc76eb0f1736ff6dd"}}], "citAreas": [{"id": "a1", "name": "Ingresso alla Cittadella Reale", "text": "Imponente scalinata sorvegliata da statue.", "x": 57.5, "y": 80.5, "photo": null}, {"id": "a2", "name": "Giardini della Roccia", "text": "Giardini pensili con fontane e piante rare.", "x": 80.2, "y": 62.9, "photo": {"id": "1c2aff6e9eb3712c4debe976a5b86e58", "url": "/_blob/1c2aff6e9eb3712c4debe976a5b86e58"}}, {"id": "a3", "name": "Residenze Reali", "text": "Dimora del Re-Thane.", "x": 31.4, "y": 58.9, "photo": null}, {"id": "a4", "name": "Archivio Reale", "text": "Depositi dei documenti storici e delle mappe.", "x": 90.0, "y": 39.8, "photo": {"id": "7494c047c0a4f99177caf25c8e9c9a52", "url": "/_blob/7494c047c0a4f99177caf25c8e9c9a52"}}, {"id": "a5", "name": "Terrazza Reale", "text": "Spazio cerimoniale all'aperto.", "x": 57.7, "y": 36.8, "photo": null}, {"id": "a6", "name": "Gallerie Cerimoniali", "text": "Corridoi decorati con bassorilievi.", "x": 19.0, "y": 42.5, "photo": null}, {"id": "a7", "name": "Sala delle Pietre", "text": "Cuore del governo cittadino.", "x": 29.6, "y": 19.7, "photo": {"id": "a9fcaa91f046b77785941d37633089c7", "url": "/_blob/a9fcaa91f046b77785941d37633089c7"}}, {"id": "a8", "name": "Sala del Trono", "text": "Luogo del potere.", "x": 57.0, "y": 17.2, "photo": {"id": "c8a334abc84007adf58a0e3ae093ecd9", "url": "/_blob/c8a334abc84007adf58a0e3ae093ecd9"}}, {"id": "a9", "name": "Sala degli Antenati", "text": "Tempio della memoria.", "x": 86.0, "y": 19.5, "photo": null}]}</script><script id="app-script">
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+var CL='<'+'/';
+var HEAD='<title>Karak-Dûran'+CL+'title><meta name="claude:viewport-fit-sides" content="cover"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,700;1,400&family=Alegreya+Sans+SC:wght@500;700&family=Cinzel:wght@500;700&display=swap">';
+var RESET=':root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}';
+var TABS=['mappa','societa','consiglio','gilde','brace','cittadella'];
+var TABNAME={mappa:'Mappa',societa:'Società',consiglio:'Consiglio',gilde:'Gilde',brace:'I Custodi della Brace',cittadella:'Cittadella Reale'};
+var TYPES={
+  building:{label:'Edificio principale',color:'--gold'},
+  residential:{label:'Quartiere residenziale',color:'--stone-hi'},
+  industrial:{label:'Struttura industriale',color:'--ember'},
+  sacred:{label:'Luogo sacro',color:'--holy'},
+  guild:{label:'Gilda / corporazione',color:'--gold'},
+  gate:{label:'Ingresso / uscita',color:'--stone-hi'},
+  well:{label:'Pozzo / sorgente',color:'--water'}
+};
+var ICON={
+  building:'<path d="M6 20V8h3v2h2V8h2v2h2V8h3v12zM10 20v-4h4v4z" fill="currentColor" fill-rule="evenodd"/>',
+  residential:'<path d="M12 4 3 12h3v8h4.5v-5h3v5H18v-8h3z" fill="currentColor"/>',
+  industrial:'<circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="3.2 2.6"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2"/>',
+  sacred:'<path d="M12 3 3 8v2h18V8zM5 11h2v7H5zM9 11h2v7H9zM13 11h2v7h-2zM17 11h2v7h-2zM3 19h18v2H3z" fill="currentColor"/>',
+  guild:'<path d="M12 3 4 6v6c0 4.5 3.2 7.7 8 9 4.8-1.3 8-4.5 8-9V6z" fill="currentColor"/>',
+  gate:'<path d="M5 21V11a7 7 0 0 1 14 0v10h-4v-9a3 3 0 0 0-6 0v9z" fill="currentColor"/>',
+  well:'<path d="M12 3c3.5 4.5 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 2.5-6.5 6-11z" fill="currentColor"/>'
+};
+function icon(type,px,col){
+  var c=col?'style="color:var('+col+')"':'';
+  return '<svg viewBox="0 0 24 24" width="'+px+'" height="'+px+'" aria-hidden="true" '+c+'>'+(ICON[type]||ICON.building)+'</svg>';
+}
+function store(k,v){try{if(v==null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v)}catch(e){}}
+function load(k){try{return sessionStorage.getItem(k)}catch(e){return null}}
+
+var S=JSON.parse($('#state').textContent);
+S.council=S.council||[];S.councilIntro=S.councilIntro||'';S.custodi=S.custodi||[];S.custodiTitle=S.custodiTitle||'I Custodi della Brace';S.custodiIntro=S.custodiIntro||'';S.citTitle=S.citTitle||'La Cittadella Reale';S.citIntro=S.citIntro||'';S.citFeatures=S.citFeatures||'';S.citAtmos=S.citAtmos||'';S.citAreas=S.citAreas||[];S.citmap=(S.citmap&&S.citmap.length)?S.citmap:[{id:'m1',name:'Pianta della Cittadella Reale',photo:null}];
+var app=$('#app');
+var NCOLL=['locations','society','guilds','council'];
+var DB=null,ISOWNER=false,kLoaded=false,kErr='',kInfl=0,kTmr={},kChain={};
+var ART=null,ASSETS=null,uploading=false,photoTarget=null,edit=false,dirty=false,filter=null,armed=null,msg='',msgErr=false,saving=false,draft=null,drag=null;
+function tabVisible(t){return t!=='brace'||ISOWNER||S.custodi.length>0}
+function tabFromHash(){var h=location.hash.slice(1);return TABS.indexOf(h)>=0&&tabVisible(h)?h:'mappa'}
+var tab=tabFromHash();
+var sel=(function(){try{var v=JSON.parse(load('kd-sel'));if(v&&v.k&&v.id)return v}catch(e){}return {k:'loc',id:'afgoria'}})();
+try{var dr=load('kd-draft');if(dr)draft=JSON.parse(dr)}catch(e){draft=null}
+
+/* geometria della montagna */
+function hw(y){return y<=400?20+(y-24)*0.718:290-(y-400)*(140/145)}
+function levelOf(y){
+  var L=S.levels;
+  for(var i=0;i<L.length;i++){if(y>=L[i].y0&&y<L[i].y1)return L[i]}
+  return y<L[0].y0?L[0]:L[L.length-1];
+}
+function locsIn(lv){return S.locations.filter(function(l){return levelOf(l.y).id===lv.id}).sort(function(a,b){return a.y-b.y||a.x-b.x})}
+function byId(coll,id){return S[coll].filter(function(x){return x.id===id})[0]}
+function uid(p){return p+Math.random().toString(36).slice(2,8)}
+function ensureSel(){
+  if(sel.k==='loc'&&!byId('locations',sel.id))sel=S.locations.length?{k:'loc',id:S.locations[0].id}:{k:'zone',id:S.levels[0].id};
+  if(sel.k==='zone'&&!byId('levels',sel.id))sel={k:'zone',id:S.levels[0].id};
+}
+
+/* mappa */
+function mapHtml(){
+  var ys=[24,70,110,150,190,235,285,335,385,400,450,500,552];
+  var jr=[0,7,-5,9,-6,6,-9,7,-4,0,-6,5,0],jl=[0,-6,8,-4,7,-8,5,-7,6,0,5,-6,0];
+  var right=ys.map(function(y,i){return [450+hw(y)+jr[i],y]});
+  var left=ys.map(function(y,i){return [450-hw(y)+jl[i],y]}).reverse();
+  var pts=right.concat(left).map(function(p){return p[0].toFixed(0)+','+p[1]}).join(' ');
+  var L=S.levels,h='';
+  h+='<svg id="map" class="'+(edit?'editing':'')+'" viewBox="0 0 760 560" role="group" aria-label="Sezione della montagna di Karak-Dûran">';
+  h+='<defs><clipPath id="mtn"><polygon points="'+pts+'"/></clipPath>';
+  h+='<linearGradient id="gMtn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--rock-a)"/><stop offset=".55" style="stop-color:var(--rock-b)"/><stop offset="1" style="stop-color:var(--rock-c)"/></linearGradient>';
+  h+='<radialGradient id="gForge" cx=".5" cy=".5" r=".5"><stop offset="0" style="stop-color:var(--ember)" stop-opacity=".95"/><stop offset=".55" style="stop-color:var(--ember-deep)" stop-opacity=".55"/><stop offset="1" style="stop-color:var(--ember-deep)" stop-opacity="0"/></radialGradient>';
+  h+='<linearGradient id="gWater" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--water)" stop-opacity=".05"/><stop offset="1" style="stop-color:var(--water)" stop-opacity=".6"/></linearGradient>';
+  h+='<pattern id="brick" width="26" height="13" patternUnits="userSpaceOnUse"><path d="M0 .5H26M0 6.5H26M.5 0V6.5M13.5 6.5V13" fill="none" stroke="#0d1420" stroke-opacity=".35" stroke-width="1"/></pattern></defs>';
+  h+='<polygon points="'+pts+'" fill="url(#gMtn)" stroke="var(--stone-hi)" stroke-opacity=".5" stroke-width="2" stroke-linejoin="round"/>';
+  h+='<g clip-path="url(#mtn)">';
+  h+='<rect x="0" y="0" width="760" height="560" fill="url(#brick)"/>';
+  var lv4=L[3]||L[0],lv6=L[L.length-1];
+  h+='<rect x="0" y="'+lv6.y0+'" width="760" height="'+(560-lv6.y0)+'" fill="url(#gWater)"/>';
+  [486,506,526].forEach(function(y,i){h+='<path d="M'+(180+i*14)+' '+y+' q15 -7 30 0'+' t30 0'.repeat(16)+'" fill="none" stroke="var(--water)" stroke-opacity="'+(.5-i*.1)+'" stroke-width="1.5"/>'});
+  h+='<ellipse class="glow" cx="450" cy="'+((lv4.y0+lv4.y1)/2)+'" rx="230" ry="64" fill="url(#gForge)"/>';
+  h+='<ellipse cx="450" cy="'+((lv4.y0+lv4.y1)/2+4)+'" rx="74" ry="17" fill="#ffd9a0" fill-opacity=".45"/>';
+  L.forEach(function(lv,i){
+    if(i>0)h+='<line x1="0" x2="760" y1="'+lv.y0+'" y2="'+lv.y0+'" stroke="var(--stone-hi)" stroke-opacity=".35" stroke-dasharray="6 5"/>';
+  });
+  L.forEach(function(lv){
+    h+='<rect class="band'+(sel.k==='zone'&&sel.id===lv.id?' on':'')+'" data-act="selz" data-id="'+lv.id+'" x="0" y="'+lv.y0+'" width="760" height="'+(lv.y1-lv.y0)+'"><title>'+esc(lv.name)+'</title></rect>';
+  });
+  h+='</g>';
+  /* cascata sul fianco destro */
+  var wf='';for(var y=140;y<=480;y+=40){wf+=(wf?' L':'M')+(450+hw(y)-12).toFixed(0)+' '+y}
+  h+='<path d="'+wf+'" fill="none" stroke="var(--holy)" stroke-opacity=".6" stroke-width="3" stroke-dasharray="2 6" stroke-linecap="round"/>';
+  /* righello dei livelli */
+  L.forEach(function(lv){
+    var mid=(lv.y0+lv.y1)/2,parts=lv.name.split(' ('),on=sel.k==='zone'&&sel.id===lv.id;
+    h+='<line x1="152" x2="'+(450-hw(mid)-6)+'" y1="'+mid+'" y2="'+mid+'" stroke="var(--line)" stroke-dasharray="2 4"/>';
+    h+='<text class="rl'+(on?' on':'')+'" data-act="selz" data-id="'+lv.id+'" x="146" y="'+(parts[1]?mid-2:mid+4)+'" text-anchor="end">'+esc(parts[0].toUpperCase())+'</text>';
+    if(parts[1])h+='<text class="rl sm" data-act="selz" data-id="'+lv.id+'" x="146" y="'+(mid+13)+'" text-anchor="end">('+esc(parts[1])+'</text>';
+  });
+  /* segnaposto */
+  var selLoc=null;
+  S.locations.forEach(function(l){
+    var T=TYPES[l.type]||TYPES.building,on=sel.k==='loc'&&sel.id===l.id;
+    if(on)selLoc=l;
+    h+='<g class="pin'+(on?' on':'')+(filter&&filter!==l.type?' dim':'')+'" data-act="sel" data-id="'+l.id+'" tabindex="0" role="button" aria-label="'+esc(l.name)+'" transform="translate('+l.x+' '+l.y+')" style="color:var('+T.color+')">';
+    h+='<circle r="22" fill="rgba(0,0,0,0)"/>';
+    if(l.secret)h+='<circle class="sec" r="21"/>';
+    h+='<circle class="ring" r="19"/><circle class="pbase" r="15"/>';
+    h+='<g transform="translate(-9 -9) scale(.75)">'+(ICON[l.type]||ICON.building)+'</g>';
+    h+='<title>'+esc(l.name)+'</title></g>';
+  });
+  if(selLoc){
+    var w=Math.round(selLoc.name.length*7.6+20),lx=Math.max(6,Math.min(selLoc.x-w/2,754-w)),ly=selLoc.y-48;
+    if(ly<4)ly=selLoc.y+26;
+    h+='<g class="plabel" pointer-events="none"><rect x="'+lx+'" y="'+ly+'" width="'+w+'" height="24" rx="2"/><text x="'+(lx+w/2)+'" y="'+(ly+16)+'">'+esc(selLoc.name)+'</text></g>';
+  }
+  /* scala */
+  h+='<g class="scale" transform="translate(16 540)">';
+  for(var i=0;i<5;i++)h+='<rect x="'+(i*24)+'" y="0" width="24" height="4" fill="'+(i%2?'var(--ink-1)':'var(--muted)')+'" stroke="var(--muted)" stroke-width=".5"/>';
+  h+='<text x="0" y="-4">0</text><text x="120" y="-4" text-anchor="end">500 m</text></g>';
+  h+='</svg>';
+  return h;
+}
+function legendHtml(){
+  return Object.keys(TYPES).map(function(k){
+    var n=S.locations.filter(function(l){return l.type===k}).length;
+    return '<button class="lg" data-act="filter" data-id="'+k+'" aria-pressed="'+(filter===k)+'">'+icon(k,16,TYPES[k].color)+TYPES[k].label+' <span class="n">'+n+'</span></button>';
+  }).join('');
+}
+function listHtml(){
+  return S.levels.map(function(lv){
+    var ls=locsIn(lv),on=sel.k==='zone'&&sel.id===lv.id;
+    return '<div class="lv"><button class="'+(on?'on':'')+'" data-act="selz" data-id="'+lv.id+'">'+esc(lv.name)+'</button>'+
+      (ls.length?'<ul>'+ls.map(function(l){
+        var T=TYPES[l.type]||TYPES.building;
+        return '<li><button class="'+(sel.k==='loc'&&sel.id===l.id?'on':'')+'" data-act="sel" data-id="'+l.id+'">'+icon(l.type,15,T.color)+esc(l.name)+'</button></li>';
+      }).join('')+'</ul>':'<span class="none">Nessun luogo in questo livello</span>')+'</div>';
+  }).join('');
+}
+function detailHtml(){
+  ensureSel();
+  var l=sel.k==='loc'?byId('locations',sel.id):null,z=sel.k==='zone'?byId('levels',sel.id):null,h='';
+  if(l){
+    var lv=levelOf(l.y),T=TYPES[l.type]||TYPES.building;
+    if(!edit){
+      h='<article class="parch">'+hidBar('locations',l)+photoImg(l)+'<p class="kick"><span class="tchip">'+icon(l.type,16,T.color)+'</span>'+esc(T.label)+' · '+esc(lv.name)+'</p><h2>'+esc(l.name)+'</h2>'+
+        (l.secret?'<span class="secret">Segreto ben custodito</span>':'')+
+        '<p class="desc">'+esc(l.desc)+'</p>'+
+        (l.notes?'<div class="mnote"><h3>Note del Master</h3><p>'+esc(l.notes)+'</p></div>':'')+'</article>';
+    }else{
+      var opts=Object.keys(TYPES).map(function(k){return '<option value="'+k+'"'+(k===l.type?' selected':'')+'>'+TYPES[k].label+'</option>'}).join('');
+      h='<article class="parch">'+hidBar('locations',l)+'<p class="kick">Modifica luogo · livello: '+esc(lv.name)+'</p>'+
+        '<div class="fld"><label for="f-name">Nome</label><input id="f-name" data-b="locations|'+l.id+'|name" value="'+esc(l.name)+'"></div>'+
+        '<div class="row2"><div class="fld"><label for="f-type">Tipo</label><select id="f-type" data-b="locations|'+l.id+'|type">'+opts+'</select></div>'+
+        '<label class="chk" for="f-sec"><input type="checkbox" id="f-sec" data-b="locations|'+l.id+'|secret"'+(l.secret?' checked':'')+'> Segreto</label></div>'+
+        '<div class="fld"><label for="f-desc">Descrizione</label><textarea id="f-desc" rows="5" data-b="locations|'+l.id+'|desc">'+esc(l.desc)+'</textarea></div>'+
+        (ISOWNER?'<div class="fld"><label for="f-notes">Note del Master</label><textarea id="f-notes" rows="3" data-b="locations|'+l.id+'|notes" placeholder="Agganci, PNG, segreti, trappole...">'+esc(l.notes)+'</textarea></div>':'')+
+        photoField('locations',l)+'<p class="hint">Trascina il segnaposto sulla mappa per spostarlo. Il livello cambia con la posizione.</p>'+
+        '<button class="btn danger small" data-act="delloc" data-id="'+l.id+'">'+(armed==='loc:'+l.id?'Conferma eliminazione':'Elimina luogo')+'</button></article>';
+    }
+  }else if(z){
+    var ls=locsIn(z);
+    if(!edit){
+      h='<article class="parch"><p class="kick">Livello della montagna</p><h2>'+esc(z.name)+'</h2>'+
+        (ls.length?'<ul class="zl">'+ls.map(function(x){return '<li><button data-act="sel" data-id="'+x.id+'">'+esc(x.name)+'</button></li>'}).join('')+'</ul>':'<p class="desc">Nessun luogo in questo livello.</p>')+'</article>';
+    }else{
+      h='<article class="parch"><p class="kick">Modifica livello</p><div class="fld"><label for="f-zname">Nome del livello</label><input id="f-zname" data-b="levels|'+z.id+'|name" value="'+esc(z.name)+'"></div>'+
+        '<p class="hint">Per assegnare un luogo a questo livello, trascina il suo segnaposto dentro la fascia.</p></article>';
+    }
+  }
+  return h;
+}
+function mapView(){
+  return '<div class="mapgrid"><div><div class="mapcard" id="mapbox">'+mapHtml()+'</div><div class="legend" id="legend">'+legendHtml()+'</div></div><aside class="side" id="detail">'+detailHtml()+'</aside></div>'+
+    '<section><h2 class="sech">Tutti i luoghi</h2><div id="locs">'+listHtml()+'</div>'+(edit?'<p style="margin-top:14px"><button class="btn" data-act="addloc">Aggiungi un luogo</button></p>':'')+'</section>';
+}
+
+/* società e gilde */
+function ctl(coll,id,i,n){
+  if(!edit)return '';
+  var key=coll+':'+id;
+  return '<div class="ctl"><button class="btn small" data-act="mv" data-coll="'+coll+'" data-id="'+id+'" data-d="-1" aria-label="Sposta su"'+(i===0?' disabled':'')+'>Su</button>'+
+    '<button class="btn small" data-act="mv" data-coll="'+coll+'" data-id="'+id+'" data-d="1" aria-label="Sposta giù"'+(i===n-1?' disabled':'')+'>Giù</button>'+
+    '<button class="btn small danger" data-act="delitem" data-coll="'+coll+'" data-id="'+id+'">'+(armed===key?'Conferma eliminazione':'Elimina')+'</button></div>';
+}
+function itemHtml(coll,it,i,n){
+  if(!edit){
+    return '<div class="card">'+hidBar(coll,it)+photoImg(it)+'<h3>'+esc(it.name)+'</h3><p>'+esc(it.text)+'</p>'+(coll==='society'&&it.id==='s2'&&S.council.length?'<p><button class="btn small" data-act="tab" data-id="consiglio">Vedi i membri del Consiglio</button></p>':'')+(it.notes?'<div class="mnote"><h4>Note del Master</h4><p>'+esc(it.notes)+'</p></div>':'')+'</div>';
+  }
+  var b=coll+'|'+it.id+'|';
+  return '<div class="card dark">'+hidBar(coll,it)+'<div class="fld"><label for="n-'+it.id+'">Nome</label><input id="n-'+it.id+'" data-b="'+b+'name" value="'+esc(it.name)+'"></div>'+
+    '<div class="fld"><label for="t-'+it.id+'">Descrizione</label><textarea id="t-'+it.id+'" rows="3" data-b="'+b+'text">'+esc(it.text)+'</textarea></div>'+
+    (ISOWNER?'<div class="fld"><label for="m-'+it.id+'">Note del Master</label><textarea id="m-'+it.id+'" rows="2" data-b="'+b+'notes" placeholder="Agganci, PNG, segreti...">'+esc(it.notes)+'</textarea></div>':'')+photoField(coll,it)+ctl(coll,it.id,i,n)+'</div>';
+}
+function societyView(){
+  var n=S.society.length;
+  return '<div class="cols"><section><h2 class="sech" style="margin-top:0">La società nanica</h2>'+
+    (edit?'<div class="fld dark" style="margin-bottom:20px"><label for="si">Introduzione</label><textarea id="si" rows="4" data-b="|root|societyIntro" style="width:100%;padding:8px 10px;background:var(--ink-2);border:1px solid var(--line);color:var(--fg)">'+esc(S.societyIntro)+'</textarea></div>':'<p class="lead">'+esc(S.societyIntro)+'</p>')+
+    '<ol class="ladder">'+S.society.map(function(it,i){return '<li class="tier">'+itemHtml('society',it,i,n)+'</li>'}).join('')+'</ol>'+
+    (edit?'<button class="btn" data-act="additem" data-coll="society">Aggiungi un grado</button>':'')+'</section>'+
+    '<aside><div class="parch life"><p class="kick">Tradizione</p><h2>La vita a Karak-Dûran</h2>'+
+    (edit?'<div class="fld" style="margin-top:12px"><label for="lf">Testo</label><textarea id="lf" rows="6" data-b="|root|life">'+esc(S.life)+'</textarea></div>':'<p>'+esc(S.life)+'</p>')+'</div></aside></div>';
+}
+function guildView(){
+  var n=S.guilds.length;
+  return '<h2 class="sech" style="margin-top:0">Le gilde principali</h2><ul class="guilds">'+S.guilds.map(function(it,i){return '<li>'+itemHtml('guilds',it,i,n)+'</li>'}).join('')+'</ul>'+
+    (edit?'<p style="margin-top:16px"><button class="btn" data-act="additem" data-coll="guilds">Aggiungi una gilda</button></p>':'');
+}
+
+/* foto */
+function photoSrc(p){return p?(p.url||(p.id?'/_blob/'+p.id:'')):''}
+function photoImg(it,cls){var s=photoSrc(it.photo);return s?'<img class="'+(cls||'ph')+'" src="'+esc(s)+'" alt="'+esc(it.name||it.house||'')+'" loading="lazy">':''}
+function photoCtl(coll,it){
+  if(!edit||!ASSETS)return '';
+  var has=!!photoSrc(it.photo);
+  return '<div class="ctl"><button class="btn small" data-act="photo" data-coll="'+coll+'" data-id="'+it.id+'"'+(uploading?' disabled':'')+'>'+(uploading?'Caricamento...':(has?'Cambia foto':'Aggiungi foto'))+'</button>'+
+    (has?'<button class="btn small danger" data-act="rmphoto" data-coll="'+coll+'" data-id="'+it.id+'">Rimuovi foto</button>':'')+'</div>';
+}
+function photoField(coll,it){
+  if(!edit||(!ASSETS&&!photoSrc(it.photo)))return '';
+  return '<div class="fld"><span class="fl">Foto</span>'+photoImg(it)+photoCtl(coll,it)+'</div>';
+}
+function prep(file){
+  return createImageBitmap(file).then(function(bmp){
+    var k=Math.min(1,1400/Math.max(bmp.width,bmp.height)),c=document.createElement('canvas');
+    c.width=Math.max(1,Math.round(bmp.width*k));c.height=Math.max(1,Math.round(bmp.height*k));
+    var g=c.getContext('2d');g.fillStyle='#142033';g.fillRect(0,0,c.width,c.height);g.drawImage(bmp,0,0,c.width,c.height);
+    return new Promise(function(res){c.toBlob(function(b){res(b||file)},'image/jpeg',0.88)});
+  }).catch(function(){return file});
+}
+var fin=document.createElement('input');
+fin.type='file';fin.accept='image/*';fin.hidden=true;fin.id='photo-in';fin.setAttribute('aria-label','Scegli una foto');
+document.body.appendChild(fin);
+fin.addEventListener('change',function(){
+  var f=fin.files&&fin.files[0],t=photoTarget;
+  if(!f||!t||!ASSETS)return;
+  if(!/^image\//.test(f.type)){msg='Scegli un file immagine.';msgErr=true;renderBar();return}
+  uploading=true;msg='Caricamento della foto...';msgErr=false;render();
+  prep(f).then(function(b){return ASSETS.upload(b)}).then(function(r){
+    var it=byId(t.coll,t.id);
+    uploading=false;
+    if(it){it.photo={id:r.id,url:r.url};if(t.coll==='custodi')wMember(it,true);else if(it.hid)wHid(t.coll,it,true);else setDirty()}
+    msg=t.coll==='custodi'?'Foto caricata e salvata.':'Foto caricata. Premi Salva per tenerla nella pagina.';msgErr=false;render();
+  }).catch(function(e){
+    uploading=false;msgErr=true;
+    msg='Caricamento non riuscito'+(e&&e.code==='rate_limited'?': troppe richieste, riprova tra poco.':'. Controlla che il file sia un\'immagine e riprova.');
+    render();
+  });
+});
+
+/* consiglio delle pietre */
+function houseHtml(it,i,n){
+  if(!edit){
+    var img=photoImg(it,'pt')||'<div class="pt empty" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor">'+ICON.guild+'</svg></div>';
+    return '<article class="house">'+img+'<div class="hb"><p class="hk">'+esc(it.house)+'</p><h3>'+esc(it.name)+'</h3><p class="hr">'+esc(it.role)+(it.age?' · '+esc(it.age)+' anni':'')+'</p>'+
+      (it.domain?'<p class="dom"><span>Dominio</span>'+esc(it.domain)+'</p>':'')+
+      '<p class="ht">'+esc(it.text)+'</p>'+(it.motto?'<p class="motto">«'+esc(it.motto)+'»</p>':'')+
+      (it.notes?'<div class="mnote"><h4>Note del Master</h4><p>'+esc(it.notes)+'</p></div>':'')+'</div></article>';
+  }
+  var b='council|'+it.id+'|',q=it.id;
+  return '<div class="card dark">'+
+    '<div class="fld"><label for="n-'+q+'">Casata</label><input id="n-'+q+'" data-b="'+b+'house" value="'+esc(it.house)+'"></div>'+
+    '<div class="row2"><div class="fld"><label for="cn-'+q+'">Nome del capocasata</label><input id="cn-'+q+'" data-b="'+b+'name" value="'+esc(it.name)+'"></div>'+
+    '<div class="fld"><label for="ca-'+q+'">Età</label><input id="ca-'+q+'" inputmode="numeric" style="width:6em" data-b="'+b+'age" value="'+esc(it.age)+'"></div></div>'+
+    '<div class="fld"><label for="cr-'+q+'">Ruolo</label><input id="cr-'+q+'" data-b="'+b+'role" value="'+esc(it.role)+'"></div>'+
+    '<div class="fld"><label for="cd-'+q+'">Dominio</label><input id="cd-'+q+'" data-b="'+b+'domain" value="'+esc(it.domain)+'"></div>'+
+    '<div class="fld"><label for="ct-'+q+'">Descrizione</label><textarea id="ct-'+q+'" rows="4" data-b="'+b+'text">'+esc(it.text)+'</textarea></div>'+
+    '<div class="fld"><label for="cm-'+q+'">Motto</label><input id="cm-'+q+'" data-b="'+b+'motto" value="'+esc(it.motto)+'"></div>'+
+    (ISOWNER?'<div class="fld"><label for="cx-'+q+'">Note del Master</label><textarea id="cx-'+q+'" rows="2" data-b="'+b+'notes" placeholder="Alleanze, rivalità, segreti...">'+esc(it.notes)+'</textarea></div>':'')+
+    photoField('council',it)+ctl('council',it.id,i,n)+'</div>';
+}
+function councilView(){
+  var n=S.council.length;
+  return '<h2 class="sech" style="margin-top:0">Il Consiglio delle Pietre</h2>'+
+    (edit?'<div class="fld dark" style="max-width:720px;margin-bottom:20px"><label for="ci">Introduzione</label><textarea id="ci" rows="3" data-b="|root|councilIntro" style="width:100%;padding:8px 10px;background:var(--ink-2);border:1px solid var(--line);color:var(--fg)">'+esc(S.councilIntro)+'</textarea></div>':(S.councilIntro?'<p class="lead">'+esc(S.councilIntro)+'</p>':''))+
+    (n?'<ul class="council">'+S.council.map(function(it,i){return '<li>'+houseHtml(it,i,n)+'</li>'}).join('')+'</ul>':'<p class="lead">Nessuna casata registrata.'+(edit?'':' Entra in modalità modifica per aggiungerne una.')+'</p>')+
+    (edit?'<p style="margin-top:16px"><button class="btn" data-act="additem" data-coll="council">Aggiungi una casata</button></p>':'');
+}
+
+/* custodi della brace nera */
+var FLAME='<path d="M12 2c.8 3.4 5.2 6.1 5.2 11.1a5.2 5.2 0 0 1-10.4 0c0-2.2 1-3.8 2.2-5 .1 1.6.7 2.7 1.8 3.3C10.3 8.6 10.8 5 12 2z"/>';
+function revBar(it){
+  if(!ISOWNER)return '';
+  return '<div class="ctl" style="margin:0 0 12px;align-items:center"><span class="secret" style="margin:0'+(it.revealed?';background:#2f6b3a':'')+'">'+(it.revealed?'Rivelato ai giocatori':'Nascosto ai giocatori')+'</span><button class="btn small'+(it.revealed?' danger':' pri')+'" data-act="reveal" data-id="'+it.id+'">'+(it.revealed?'Nascondi di nuovo':'Rivela ai giocatori')+'</button></div>';
+}
+function memberHtml(it,i,n){
+  if(!(edit&&ISOWNER)){
+    var img=photoImg(it,'pt')||'<div class="pt empty" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor">'+FLAME+'</svg></div>';
+    var meta=[it.race,it.age?it.age+' anni':''].filter(Boolean).join(' · ');
+    return '<article class="house">'+img+'<div class="hb">'+revBar(it)+(it.title?'<p class="hk">'+esc(it.title)+'</p>':'')+'<h3>'+esc(it.name)+'</h3>'+(meta?'<p class="hr">'+esc(meta)+'</p>':'')+
+      '<p class="ht">'+esc(it.text)+'</p>'+
+      (it.notes?'<div class="mnote"><h4>Note del Master</h4><p>'+esc(it.notes)+'</p></div>':'')+'</div></article>';
+  }
+  var b='custodi|'+it.id+'|',q=it.id;
+  return '<div class="card dark">'+revBar(it)+
+    '<div class="fld"><label for="n-'+q+'">Nome</label><input id="n-'+q+'" data-b="'+b+'name" value="'+esc(it.name)+'"></div>'+
+    '<div class="fld"><label for="kt-'+q+'">Titolo e ruolo</label><input id="kt-'+q+'" data-b="'+b+'title" value="'+esc(it.title)+'"></div>'+
+    '<div class="row2"><div class="fld"><label for="kr-'+q+'">Stirpe</label><input id="kr-'+q+'" data-b="'+b+'race" value="'+esc(it.race)+'"></div>'+
+    '<div class="fld"><label for="ka-'+q+'">Età</label><input id="ka-'+q+'" inputmode="numeric" style="width:6em" data-b="'+b+'age" value="'+esc(it.age)+'"></div></div>'+
+    '<div class="fld"><label for="kx-'+q+'">Descrizione</label><textarea id="kx-'+q+'" rows="6" data-b="'+b+'text">'+esc(it.text)+'</textarea></div>'+
+    '<div class="fld"><label for="km-'+q+'">Note del Master</label><textarea id="km-'+q+'" rows="2" data-b="'+b+'notes" placeholder="Segreti, obiettivi, reazioni ai PG...">'+esc(it.notes)+'</textarea></div>'+
+    photoField('custodi',it)+ctl('custodi',it.id,i,n)+'</div>';
+}
+function braceView(){
+  var n=S.custodi.length,ed=edit&&ISOWNER;
+  var head=ed?
+    '<div class="dark" style="max-width:720px;margin-bottom:20px"><div class="fld"><label for="bt">Titolo</label><input id="bt" data-b="|root|custodiTitle" value="'+esc(S.custodiTitle)+'"></div>'+
+    '<div class="fld"><label for="bi">Introduzione</label><textarea id="bi" rows="4" data-b="|root|custodiIntro">'+esc(S.custodiIntro)+'</textarea></div></div>':
+    '<h2 class="sech" style="margin-top:0">'+esc(S.custodiTitle)+'</h2>'+(S.custodiIntro?'<p class="lead">'+esc(S.custodiIntro)+'</p>':'');
+  if(ISOWNER)head='<p class="hint" style="max-width:720px;margin:0 0 16px;color:var(--gold)">Scheda segreta: la vedi solo tu. I giocatori la vedono solo quando riveli almeno un custode. <span id="bst" role="status">'+esc(kErr||(kLoaded?'':'Caricamento...'))+'</span></p>'+head;
+  return head+
+    (n?'<ul class="council">'+S.custodi.map(function(it,i){return '<li>'+memberHtml(it,i,n)+'</li>'}).join('')+'</ul>':'<p class="lead">Nessun custode registrato.'+(ed?'':(ISOWNER?' Entra in modalità modifica per aggiungerne uno.':''))+'</p>')+
+    (ed?'<p style="margin-top:16px"><button class="btn" data-act="additem" data-coll="custodi">Aggiungi un custode</button></p>':'');
+}
+
+/* cittadella reale */
+var csel=null,cdrag=null;
+function lines(t){return String(t||'').split('\n').map(function(x){return x.trim()}).filter(Boolean)}
+function citEnsure(){if(!csel||!byId('citAreas',csel))csel=S.citAreas.length?S.citAreas[0].id:null}
+function citMapHtml(){
+  var m=S.citmap[0],src=photoSrc(m.photo);
+  var pins=S.citAreas.map(function(a,i){return '<button class="cpin'+(a.id===csel?' on':'')+'" data-act="csel" data-id="'+a.id+'" style="left:'+a.x+'%;top:'+a.y+'%" aria-label="'+esc(a.name)+'" title="'+esc(a.name)+'">'+(i+1)+'</button>'}).join('');
+  return '<figure class="cmap'+(edit?' editing':'')+'"><div class="cmi" id="cmi">'+(src?'<img src="'+esc(src)+'" alt="Pianta della Cittadella Reale">':'<div class="cmap-empty">'+(edit?'Carica la pianta con il pulsante qui sotto.':'Nessuna pianta caricata.')+'</div>')+pins+'</div></figure>';
+}
+function citListHtml(){
+  return S.citAreas.map(function(a,i){
+    return '<li><button class="ai'+(a.id===csel?' on':'')+'" data-act="csel" data-id="'+a.id+'"><span class="num">'+(i+1)+'</span><span><b>'+esc(a.name)+'</b>'+(a.text?'<span class="t">'+esc(a.text)+'</span>':'')+'</span></button></li>';
+  }).join('');
+}
+function citDetail(){
+  var a=byId('citAreas',csel);
+  if(!a)return '<article class="parch"><p class="desc">Nessuna area registrata.'+(edit?'':' Entra in modalità modifica per aggiungerne una.')+'</p></article>';
+  var i=S.citAreas.indexOf(a),n=S.citAreas.length;
+  if(!edit)return '<article class="parch">'+photoImg(a)+'<p class="kick">Area '+(i+1)+' di '+n+'</p><h2>'+esc(a.name)+'</h2><p class="desc">'+esc(a.text)+'</p></article>';
+  var b='citAreas|'+a.id+'|';
+  return '<article class="parch"><p class="kick">Modifica area '+(i+1)+' di '+n+'</p>'+
+    '<div class="fld"><label for="ca-n">Nome</label><input id="ca-n" data-b="'+b+'name" value="'+esc(a.name)+'"></div>'+
+    '<div class="fld"><label for="ca-t">Descrizione</label><textarea id="ca-t" rows="3" data-b="'+b+'text">'+esc(a.text)+'</textarea></div>'+
+    photoField('citAreas',a)+'<p class="hint">Trascina il numero sulla pianta per spostarlo.</p>'+ctl('citAreas',a.id,i,n)+'</article>';
+}
+function citRefresh(){var l=$('#alist');if(l)l.innerHTML=citListHtml()}
+function bullets(t){var ls=lines(t);return ls.length?'<ul class="dia">'+ls.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':'<p class="none" style="color:var(--muted);font-style:italic">Nessun elemento.</p>'}
+function citView(){
+  citEnsure();
+  var head=edit?
+    '<div class="dark" style="max-width:720px;margin-bottom:20px"><div class="fld"><label for="ct-h">Titolo</label><input id="ct-h" data-b="|root|citTitle" value="'+esc(S.citTitle)+'"></div>'+
+    '<div class="fld"><label for="ct-i">Introduzione</label><textarea id="ct-i" rows="4" data-b="|root|citIntro">'+esc(S.citIntro)+'</textarea></div></div>':
+    '<h2 class="sech" style="margin-top:0">'+esc(S.citTitle)+'</h2>'+(S.citIntro?'<p class="lead">'+esc(S.citIntro)+'</p>':'');
+  var left='<div class="side">'+citMapHtml()+(edit?'<div class="dark" style="margin-top:12px">'+photoCtl('citmap',S.citmap[0])+'</div>':'')+'</div>';
+  var right='<div><div id="cdetail">'+citDetail()+'</div><ol class="alist" id="alist">'+citListHtml()+'</ol>'+(edit?'<p style="margin-top:12px"><button class="btn" data-act="additem" data-coll="citAreas">Aggiungi area</button></p>':'')+'</div>';
+  var low=edit?
+    '<div class="cit2"><div class="card dark"><div class="fld"><label for="ct-f">Caratteristiche principali (una per riga)</label><textarea id="ct-f" rows="5" data-b="|root|citFeatures">'+esc(S.citFeatures)+'</textarea></div></div>'+
+    '<div class="card dark"><div class="fld"><label for="ct-a">Atmosfera e dettagli (una per riga)</label><textarea id="ct-a" rows="5" data-b="|root|citAtmos">'+esc(S.citAtmos)+'</textarea></div></div></div>':
+    '<div class="cit2"><div class="card"><h3>Caratteristiche principali</h3>'+bullets(S.citFeatures)+'</div><div class="card"><h3>Atmosfera e dettagli</h3>'+bullets(S.citAtmos)+'</div></div>';
+  return head+'<div class="cit">'+left+right+'</div>'+low;
+}
+app.addEventListener('pointerdown',function(e){
+  if(!edit||tab!=='cittadella')return;
+  var p=e.target.closest('.cpin');if(!p)return;
+  var a=byId('citAreas',p.getAttribute('data-id'));if(!a)return;
+  cdrag={a:a,el:p,moved:false,sx:e.clientX,sy:e.clientY};
+  try{p.setPointerCapture(e.pointerId)}catch(x){}
+});
+app.addEventListener('pointermove',function(e){
+  if(!cdrag)return;
+  if(!cdrag.moved&&Math.abs(e.clientX-cdrag.sx)+Math.abs(e.clientY-cdrag.sy)<5)return;
+  cdrag.moved=true;
+  var r=$('#cmi').getBoundingClientRect(),a=cdrag.a;
+  a.x=Math.round(clamp((e.clientX-r.left)/r.width*100,2,98)*10)/10;
+  a.y=Math.round(clamp((e.clientY-r.top)/r.height*100,2,98)*10)/10;
+  cdrag.el.style.left=a.x+'%';cdrag.el.style.top=a.y+'%';
+});
+function endCdrag(){if(!cdrag)return;var m=cdrag.moved,id=cdrag.a.id;cdrag=null;if(m){csel=id;setDirty();render()}}
+app.addEventListener('pointerup',endCdrag);
+app.addEventListener('pointercancel',endCdrag);
+
+/* struttura */
+function headerHtml(){
+  if(edit){
+    return '<header class="hdr"><div class="stack dark"><input class="in-h1" id="h-t" data-b="|root|title" value="'+esc(S.title)+'" aria-label="Titolo"><input id="h-s" data-b="|root|subtitle" value="'+esc(S.subtitle)+'" aria-label="Sottotitolo"><textarea id="h-g" rows="2" data-b="|root|tagline" aria-label="Frase di apertura">'+esc(S.tagline)+'</textarea></div>'+
+      '<div class="stack dark"><input id="h-c" data-b="|root|city" value="'+esc(S.city)+'" aria-label="Nome della città"><textarea id="h-ct" rows="3" data-b="|root|cityText" aria-label="Descrizione breve">'+esc(S.cityText)+'</textarea></div></header>';
+  }
+  return '<header class="hdr"><div><h1>'+esc(S.title)+'</h1><div class="sub">'+esc(S.subtitle)+'</div><p class="tag">'+esc(S.tagline)+'</p></div><div class="city"><h2>'+esc(S.city)+'</h2><p>'+esc(S.cityText)+'</p></div></header>';
+}
+function tabsHtml(){
+  return '<nav class="tabs" role="tablist" aria-label="Sezioni">'+TABS.filter(tabVisible).map(function(t){
+    return '<button class="tab" role="tab" id="tab-'+t+'" aria-selected="'+(tab===t)+'" data-act="tab" data-id="'+t+'">'+TABNAME[t]+'</button>';
+  }).join('')+'<span class="sp"></span>'+(ART?'<button class="btn'+(edit?' on':'')+'" data-act="edit" aria-pressed="'+edit+'">'+(edit?'Esci dalla modifica':'Modifica')+'</button>':'')+'</nav>';
+}
+function footHtml(){
+  return '<footer style="margin-top:40px;padding-top:18px;border-top:1px solid var(--line);text-align:center"><p style="font-family:var(--f-display);letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin:0;font-size:.95rem">'+(edit?'':esc(S.motto))+'</p>'+
+    (edit?'<div class="fld dark" style="max-width:420px;margin:0 auto"><label for="mt">Motto</label><input id="mt" data-b="|root|motto" value="'+esc(S.motto)+'" style="width:100%;padding:8px 10px;background:var(--ink-2);border:1px solid var(--line);color:var(--fg)"></div>':'')+'</footer>';
+}
+function render(){
+  var y=window.scrollY;
+  ensureSel();
+  var v=tab==='societa'?societyView():tab==='consiglio'?councilView():tab==='gilde'?guildView():tab==='brace'?braceView():tab==='cittadella'?citView():mapView();
+  app.innerHTML='<div class="wrap">'+headerHtml()+tabsHtml()+'<main role="tabpanel" aria-labelledby="tab-'+tab+'">'+v+'</main>'+footHtml()+'</div><div class="bar" id="bar" hidden></div>';
+  renderBar();
+  window.scrollTo(0,y);
+}
+function refreshMap(){
+  var m=$('#mapbox');if(!m)return;
+  m.innerHTML=mapHtml();
+  var lg=$('#legend');if(lg)lg.innerHTML=legendHtml();
+  var ls=$('#locs');if(ls)ls.innerHTML=listHtml();
+}
+function renderBar(){
+  var b=$('#bar');if(!b)return;
+  if(!(edit||dirty||draft)){b.hidden=true;b.innerHTML='';return}
+  var h='<div class="in">';
+  if(draft&&!dirty){
+    h+='<span class="st">Hai una bozza non salvata di prima, interrotta da un salvataggio concorrente.</span><button class="btn pri" data-act="restore">Riprendi la bozza</button><button class="btn" data-act="dropdraft">Scarta</button>';
+  }else{
+    h+='<span class="st'+(msgErr?' err':'')+'" role="status">'+esc(msg||(dirty?'Modifiche non salvate.':'Nessuna modifica da salvare.'))+'</span>';
+    h+='<button class="btn pri" data-act="save"'+(saving||!dirty?' disabled':'')+'>'+(saving?'Salvataggio...':'Salva nel cloud')+'</button>';
+    h+='<button class="btn" data-act="revert"'+(dirty?'':' disabled')+'>Annulla modifiche</button>';
+  }
+  h+='</div>';
+  b.hidden=false;b.innerHTML=h;
+}
+function setDirty(){dirty=true;msg='';msgErr=false;renderBar()}
+
+/* salvataggio */
+function buildDoc(){
+  var pub=Object.assign({},S);delete pub.custodi;delete pub.custodiTitle;delete pub.custodiIntro;
+  NCOLL.forEach(function(c){pub[c]=S[c].filter(function(it){return !it.hid}).map(function(it){var o=Object.assign({},it);delete o.notes;return o})});
+  var json=JSON.stringify(pub).replace(/</g,'\\u003c');
+  var css=$('#app-style').textContent,js=$('#app-script').textContent;
+  return '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>'+RESET+CL+'style>'+CL+'head><body>'+HEAD+'<style id="app-style">'+css+CL+'style><div id="app">'+CL+'div><script type="application/json" id="state">'+json+CL+'script><script id="app-script">'+js+CL+'script>'+CL+'body>'+CL+'html>';
+}
+function save(){
+  if(saving||!dirty)return;
+  if(!ART){msg='Il salvataggio non è disponibile in questa vista.';msgErr=true;renderBar();return}
+  saving=true;msg='';msgErr=false;renderBar();
+  store('kd-sel',JSON.stringify(sel));store('kd-draft',null);
+  var doc;
+  try{doc=buildDoc()}catch(e){saving=false;msg='Non sono riuscito a preparare la pagina.';msgErr=true;renderBar();return}
+  ART.publish(doc).then(function(){
+    dirty=false;saving=false;msg='Salvato.';renderBar();
+  }).catch(function(e){
+    saving=false;msgErr=true;
+    var c=e&&e.code;
+    if(c==='conflict'){store('kd-draft',JSON.stringify(S));msg='Qualcun altro ha salvato prima di te. La pagina si ricarica e la tua bozza resta da parte.'}
+    else if(c==='not_writer'||c==='not_granted'||c==='consent_required'||c==='not_declared'||c==='capability_disabled'||c==='capability_removed'){msg='Questa vista è in sola lettura: possono salvare solo le persone con accesso in modifica.'}
+    else if(c==='too_large'){msg='La pagina è diventata troppo grande per essere salvata.'}
+    else if(c==='rate_limited'){msg='Troppi salvataggi ravvicinati. Aspetta qualche secondo e riprova.'}
+    else{msg='Salvataggio non riuscito. Riprova tra poco.'}
+    renderBar();
+  });
+}
+
+/* azioni */
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function act(el,e){
+  var a=el.getAttribute('data-act'),id=el.getAttribute('data-id'),coll=el.getAttribute('data-coll');
+  if(a==='tab'){location.hash=id;return}
+  if(a==='sel'){sel={k:'loc',id:id};store('kd-sel',JSON.stringify(sel));render();return}
+  if(a==='selz'){sel={k:'zone',id:id};store('kd-sel',JSON.stringify(sel));render();return}
+  if(a==='filter'){filter=filter===id?null:id;refreshMap();return}
+  if(a==='edit'){edit=!edit;armed=null;msg='';render();return}
+  if(a==='csel'){csel=id;render();return}
+  if(a==='photo'){if(uploading||!ASSETS)return;photoTarget={coll:coll,id:id};fin.value='';fin.click();return}
+  if(a==='rmphoto'){var pit=byId(coll,id);if(pit){pit.photo=null;if(coll==='custodi')wMember(pit,true);else if(pit.hid)wHid(coll,pit,true);else setDirty();render()}return}
+  if(a==='revealh'){var hit=byId(coll,id);if(!hit||!ISOWNER||!hit.hid)return;hit.revealed=!hit.revealed;wHid(coll,hit,true);render();return}
+  if(a==='reveal'){var rit=byId('custodi',id);if(!rit||!ISOWNER)return;rit.revealed=!rit.revealed;wMember(rit,true);render();return}
+  if(a==='save'){save();return}
+  if(a==='revert'){S=keepK(JSON.parse($('#state').textContent));dirty=false;msg='';armed=null;render();return}
+  if(a==='restore'){S=keepK(draft);draft=null;store('kd-draft',null);dirty=true;edit=true;msg='Bozza ripresa.';render();return}
+  if(a==='dropdraft'){draft=null;store('kd-draft',null);renderBar();return}
+  if(a==='addloc'){
+    var nl={id:uid('l'),name:'Nuovo luogo',type:'building',x:450,y:250,desc:'',notes:'',secret:false};
+    S.locations.push(nl);sel={k:'loc',id:nl.id};setDirty();render();return;
+  }
+  if(a==='delloc'){
+    if(armed==='loc:'+id){var dl=byId('locations',id);S.locations=S.locations.filter(function(l){return l.id!==id});armed=null;if(dl&&dl.hid)wHidDelete('locations',id);else{setDirty();wNotes()}render();return}
+    armed='loc:'+id;render();setTimeout(function(){if(armed==='loc:'+id){armed=null;render()}},3500);return;
+  }
+  if(a==='additem'){
+    var it=coll==='citAreas'?{id:uid('a'),name:'Nuova area',text:'',x:50,y:50,photo:null}:coll==='custodi'?{id:uid('k'),name:'Nuovo custode',title:'',race:'Nano',age:'',text:'',notes:'',photo:null}:coll==='council'?{id:uid('c'),house:'Nuova casata',name:'',role:'Capocasata',age:'',domain:'',text:'',motto:'',notes:'',photo:null}:{id:uid(coll==='guilds'?'g':'s'),name:coll==='guilds'?'Nuova gilda':'Nuovo grado',text:'',notes:''};
+    S[coll].push(it);if(coll==='citAreas')csel=it.id;if(coll==='custodi')wMember(it,true);else setDirty();render();
+    var f=$('#n-'+it.id);if(f)f.focus();return;
+  }
+  if(a==='delitem'){
+    var key=coll+':'+id;
+    if(armed===key){var di=byId(coll,id);S[coll]=S[coll].filter(function(x){return x.id!==id});armed=null;if(coll==='custodi')wDelete(id);else if(di&&di.hid)wHidDelete(coll,id);else{setDirty();wNotes()}render();return}
+    armed=key;render();setTimeout(function(){if(armed===key){armed=null;render()}},3500);return;
+  }
+  if(a==='mv'){
+    var d=parseInt(el.getAttribute('data-d'),10),arr=S[coll],i=arr.map(function(x){return x.id}).indexOf(id),j=i+d;
+    if(i<0||j<0||j>=arr.length)return;
+    var t=arr[i];arr[i]=arr[j];arr[j]=t;if(coll==='custodi')wOrder();else{setDirty();wHidOrder(coll)}render();
+    return;
+  }
+}
+app.addEventListener('click',function(e){
+  var el=e.target.closest('[data-act]');
+  if(!el||!app.contains(el))return;
+  if(drag&&drag.moved){drag=null;return}
+  act(el,e);
+});
+app.addEventListener('keydown',function(e){
+  if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('pin')){e.preventDefault();act(e.target,e)}
+});
+app.addEventListener('input',function(e){
+  var t=e.target,b=t.getAttribute&&t.getAttribute('data-b');
+  if(!b)return;
+  var p=b.split('|'),c=p[0],id=p[1],f=p[2],v=t.type==='checkbox'?t.checked:t.value;
+  if(!c){S[f]=v}else{var it=byId(c,id);if(!it)return;it[f]=v}
+  if(it&&it.hid&&NCOLL.indexOf(c)>=0){if(ISOWNER)wHid(c,it);return}
+  if(f==='notes'&&NCOLL.indexOf(c)>=0){if(ISOWNER)wNotes();return}
+  if(c==='custodi'){if(ISOWNER)wMember(it);return}
+  if(!c&&(f==='custodiTitle'||f==='custodiIntro')){if(ISOWNER)wMeta();return}
+  setDirty();
+  if(c==='locations'||c==='levels')refreshMap();
+  if(c==='citAreas')citRefresh();
+});
+
+/* trascinamento dei segnaposto in modifica */
+app.addEventListener('pointerdown',function(e){
+  if(!edit||tab!=='mappa')return;
+  var pin=e.target.closest('.pin');if(!pin)return;
+  var l=byId('locations',pin.getAttribute('data-id'));if(!l)return;
+  drag={id:l.id,el:pin,moved:false,sx:e.clientX,sy:e.clientY};
+  try{pin.setPointerCapture(e.pointerId)}catch(x){}
+});
+app.addEventListener('pointermove',function(e){
+  if(!drag)return;
+  if(!drag.moved&&Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy)<5)return;
+  drag.moved=true;
+  var svg=$('#map'),pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
+  var p=pt.matrixTransform(svg.getScreenCTM().inverse());
+  var l=byId('locations',drag.id);
+  var y=clamp(p.y,40,540),h=hw(y)-18;
+  l.y=Math.round(y);l.x=Math.round(clamp(p.x,450-h,450+h));
+  drag.el.setAttribute('transform','translate('+l.x+' '+l.y+')');
+});
+function endDrag(){
+  if(!drag)return;
+  var moved=drag.moved,id=drag.id;
+  if(moved){sel={k:'loc',id:id};var dl2=byId('locations',id);if(dl2&&dl2.hid)wHid('locations',dl2,true);else setDirty();render();setTimeout(function(){drag=null},0)}
+  else drag=null;
+}
+app.addEventListener('pointerup',endDrag);
+app.addEventListener('pointercancel',endDrag);
+
+
+/* custodi: database privato (solo il proprietario legge 'secret'; 'revealed' e' cio' che hai mostrato ai giocatori) */
+
+function mergeHid(pub,hl){var out=pub.slice();hl.slice().sort(function(a,b){return (a.idx||0)-(b.idx||0)}).forEach(function(h){out.splice(Math.min(h.idx||0,out.length),0,h.it)});return out}
+function hidItem(it,withNotes){var o=Object.assign({},it);delete o.hid;delete o.revealed;if(!withNotes)delete o.notes;return o}
+function wHid(c,it,now){
+  if(!DB||!ISOWNER)return;
+  var key='h'+c+it.id,did='hid_'+c+'_'+it.id;
+  var go=function(){
+    delete kTmr[key];
+    var i=S[c].indexOf(it);if(i<0)return;
+    var rv=!!it.revealed,sd={coll:c,idx:i,revealed:rv,item:hidItem(it,true)},pd={coll:c,idx:i,item:hidItem(it,false)};
+    kq('s'+did,function(){return DB.doc('secret/'+did).set(sd)});
+    kq('r'+did,function(){return rv?DB.doc('revealed/'+did).set(pd):DB.doc('revealed/'+did).delete()});
+  };
+  clearTimeout(kTmr[key]);
+  if(now){go();return}
+  kTmr[key]=setTimeout(go,800);kMsg('Salvataggio...');
+}
+function wHidDelete(c,id){
+  if(!DB||!ISOWNER)return;var did='hid_'+c+'_'+id;
+  kq('s'+did,function(){return DB.doc('secret/'+did).delete()});
+  kq('r'+did,function(){return DB.doc('revealed/'+did).delete()});
+}
+function wHidOrder(c){S[c].forEach(function(it){if(it.hid)wHid(c,it,true)})}
+function hidBar(c,it){
+  if(!ISOWNER||!it.hid)return '';
+  return '<div class="ctl" style="margin:0 0 12px;align-items:center"><span class="secret" style="margin:0'+(it.revealed?';background:#2f6b3a':'')+'">'+(it.revealed?'Rivelato ai giocatori':'Nascosto ai giocatori')+'</span><button class="btn small'+(it.revealed?' danger':' pri')+'" data-act="revealh" data-coll="'+c+'" data-id="'+it.id+'">'+(it.revealed?'Nascondi di nuovo':'Rivela ai giocatori')+'</button></div>';
+}
+function collectNotes(){var o={};NCOLL.forEach(function(c){o[c]={};S[c].forEach(function(it){if(it.notes&&!it.hid)o[c][it.id]=it.notes})});return o}
+function wNotes(){
+  if(!DB||!ISOWNER)return;
+  clearTimeout(kTmr.notes);
+  kTmr.notes=setTimeout(function(){
+    delete kTmr.notes;
+    var d=collectNotes();
+    kq('snotes',function(){return DB.doc('secret/notes').set(d)});
+  },800);kMsg('Salvataggio note...');
+}
+function keepK(n){var nm=collectNotes();NCOLL.forEach(function(c){var hl=[];S[c].forEach(function(it,i){if(it.hid)hl.push({idx:i,it:it})});(n[c]||[]).forEach(function(it){it.notes=nm[c][it.id]||''});n[c]=mergeHid(n[c]||[],hl)});n.custodi=S.custodi;n.custodiTitle=S.custodiTitle;n.custodiIntro=S.custodiIntro;return n}
+function kMsg(t,err){var e=$('#bst');if(e){e.textContent=t;e.style.color=err?'#ffb08a':''}else if(err||edit){msg=t;msgErr=!!err;renderBar()}}
+function kq(key,fn){
+  kInfl++;
+  kChain[key]=(kChain[key]||Promise.resolve()).then(fn).catch(function(){kMsg('Salvataggio non riuscito. Riprova tra poco.',true)}).then(function(){kInfl--;if(!kInfl&&!Object.keys(kTmr).length)kMsg('Salvato nel database segreto.')});
+  return kChain[key];
+}
+function sDoc(it,i){return {order:i,name:it.name||'',title:it.title||'',race:it.race||'',age:it.age||'',text:it.text||'',notes:it.notes||'',photo:it.photo||null,revealed:!!it.revealed}}
+function pDoc(it,i){return {order:i,name:it.name||'',title:it.title||'',race:it.race||'',age:it.age||'',text:it.text||'',photo:it.photo||null}}
+function wRevMeta(){
+  if(!DB)return;
+  var any=S.custodi.some(function(x){return x.revealed});
+  kq('rm',function(){return any?DB.doc('revealed/meta').set({title:S.custodiTitle||'',intro:S.custodiIntro||''}):DB.doc('revealed/meta').delete()});
+}
+function wMember(it,now){
+  if(!DB||!ISOWNER)return;
+  var key='m'+it.id;
+  var go=function(){
+    delete kTmr[key];
+    var i=S.custodi.indexOf(it);if(i<0)return;
+    var sd=sDoc(it,i),pd=pDoc(it,i),rv=!!it.revealed;
+    kq('s'+it.id,function(){return DB.doc('secret/'+it.id).set(sd)});
+    kq('r'+it.id,function(){return rv?DB.doc('revealed/'+it.id).set(pd):DB.doc('revealed/'+it.id).delete()});
+    wRevMeta();
+  };
+  clearTimeout(kTmr[key]);
+  if(now){go();return}
+  kTmr[key]=setTimeout(go,800);kMsg('Salvataggio...');
+}
+function wMeta(){
+  if(!DB||!ISOWNER)return;
+  clearTimeout(kTmr.meta);
+  kTmr.meta=setTimeout(function(){
+    delete kTmr.meta;
+    var t=S.custodiTitle||'',n=S.custodiIntro||'';
+    kq('smeta',function(){return DB.doc('secret/meta').set({title:t,intro:n})});
+    wRevMeta();
+  },800);kMsg('Salvataggio...');
+}
+function wOrder(){S.custodi.forEach(function(it){wMember(it,true)})}
+function wDelete(id){
+  if(!DB||!ISOWNER)return;
+  kq('s'+id,function(){return DB.doc('secret/'+id).delete()});
+  kq('r'+id,function(){return DB.doc('revealed/'+id).delete()});
+  wRevMeta();
+}
+function kApply(snap,owner){
+  var list=[],meta=null,nm=null,hl=[];
+  snap.docs.forEach(function(d){
+    var x=d.data()||{};
+    if(d.id==='meta'){meta=x;return}
+    if(d.id==='notes'){nm=x;return}
+    if(d.id.indexOf('hid_')===0){var hi=Object.assign({},x.item||{});hi.hid=true;hi.revealed=owner?!!x.revealed:true;if(!owner)delete hi.notes;hl.push({c:x.coll,idx:x.idx,it:hi});return}
+    var o={id:d.id};Object.keys(x).forEach(function(k){o[k]=x[k]});
+    if(!owner)o.revealed=true;
+    list.push(o);
+  });
+  list.sort(function(a,b){return (a.order||0)-(b.order||0)});
+  var was=kLoaded;kLoaded=true;kErr='';
+  if(kInfl||Object.keys(kTmr).length)return;
+  var ot=S.custodiTitle,oi=S.custodiIntro;
+  if(meta){S.custodiTitle=meta.title||S.custodiTitle;S.custodiIntro=meta.intro||''}
+  var sig=function(a){return JSON.stringify(a)};
+  var nch=false;
+  if(owner&&nm)NCOLL.forEach(function(c){S[c].forEach(function(it){if(it.hid)return;var v=(nm[c]&&nm[c][it.id])||'';if((it.notes||'')!==v){it.notes=v;nch=true}})});
+  var mg={};NCOLL.forEach(function(c){mg[c]=mergeHid(S[c].filter(function(x){return !x.hid}),hl.filter(function(h){return h.c===c}))});
+  var hs=function(L){return JSON.stringify(NCOLL.map(function(c){return L[c].map(function(it,i){return it.hid?[i,it.id,it.name,it.text,it.desc,it.notes,it.revealed,it.x,it.y,it.type,it.secret,it.photo&&it.photo.id]:0})}))};
+  var hch=hs(mg)!==hs(S);
+  var changed=hch||nch||sig(list)!==sig(S.custodi)||ot!==S.custodiTitle||oi!==S.custodiIntro||!was;
+  if(!changed)return;
+  S.custodi=list;
+  if(hch)NCOLL.forEach(function(c){S[c]=mg[c]});
+  var ae=document.activeElement;
+  if(ae&&app.contains(ae)&&/^(INPUT|TEXTAREA)$/.test(ae.tagName))return;
+  tab=tabFromHash();render();
+}
+function kInit(){
+  if(!window.claude||typeof window.claude.use!=='function')return;
+  Promise.all([window.claude.use('db'),window.claude.use('user')]).then(function(r){
+    DB=r[0];var u=r[1];
+    return (u?u.isOwner():Promise.resolve(false)).then(function(o){
+      ISOWNER=!!o;
+      if(!DB){if(ISOWNER){kErr='Database non disponibile.';render()}return}
+      var onErr=function(){kErr='Non riesco a leggere i Custodi.';if(tab==='brace')render()};
+      if(ISOWNER){render();DB.collection('secret').onSnapshot(function(s){kApply(s,true)},onErr)}
+      else DB.collection('revealed').onSnapshot(function(s){kApply(s,false)},function(){});
+    });
+  }).catch(function(){});
+}
+window.addEventListener('hashchange',function(){tab=tabFromHash();render()});
+render();kInit();
+if(window.claude&&typeof window.claude.use==='function'){
+  window.claude.use('artifact').then(function(a){ART=a;if(a&&!dirty)render();else renderBar()}).catch(function(){});
+  window.claude.use('assets').then(function(a){ASSETS=a;if(a&&edit&&!uploading)render()}).catch(function(){});
+}
+})();
+</script>
+</body></html>
