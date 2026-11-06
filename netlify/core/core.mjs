@@ -1,6 +1,6 @@
 import { createHash, timingSafeEqual, randomUUID } from 'node:crypto';
 
-const NCOLL = ['locations', 'society', 'guilds', 'council'];
+const NCOLL = ['locations', 'society', 'guilds', 'council', 'citAreas'];
 const MAX_STATE = 1.5 * 1024 * 1024;
 const MAX_IMG = 5 * 1024 * 1024;
 

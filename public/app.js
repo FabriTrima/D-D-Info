@@ -35,7 +35,7 @@ function load(k){try{return sessionStorage.getItem(k)}catch(e){return null}}
 
 var S={levels:[],locations:[],society:[],guilds:[],council:[],custodi:[]};
 var app=$('#app');
-var NCOLL=['locations','society','guilds','council'];
+var NCOLL=['locations','society','guilds','council','citAreas'];
 var ISOWNER=(window.KD_MODE==='master'),KEY=load('kd-key')||'',loaded=false,lastSig='';
 var ART=null,ASSETS=null,uploading=false,photoTarget=null,edit=false,dirty=false,filter=null,armed=null,msg='',msgErr=false,saving=false,draft=null,drag=null;
 function tabVisible(t){if(t==='note')return !ISOWNER;return t!=='brace'||ISOWNER||S.custodi.length>0}
@@ -386,16 +386,16 @@ function citMapHtml(){
 }
 function citListHtml(){
   return S.citAreas.map(function(a,i){
-    return '<li><button class="ai'+(a.id===csel?' on':'')+'" data-act="csel" data-id="'+a.id+'"><span class="num">'+(i+1)+'</span><span><b>'+esc(a.name)+'</b>'+(a.text?'<span class="t">'+esc(a.text)+'</span>':'')+'</span></button></li>';
+    return '<li><button class="ai'+(a.id===csel?' on':'')+'" data-act="csel" data-id="'+a.id+'"><span class="num">'+(i+1)+'</span><span><b>'+esc(a.name)+'</b>'+(ISOWNER&&a.hid&&!a.revealed?' <span class="t">(nascosta ai giocatori)</span>':'')+(a.text?'<span class="t">'+esc(a.text)+'</span>':'')+'</span></button></li>';
   }).join('');
 }
 function citDetail(){
   var a=byId('citAreas',csel);
   if(!a)return '<article class="parch"><p class="desc">Nessuna area registrata.'+(edit?'':' Entra in modalità modifica per aggiungerne una.')+'</p></article>';
   var i=S.citAreas.indexOf(a),n=S.citAreas.length;
-  if(!edit)return '<article class="parch">'+photoImg(a)+'<p class="kick">Area '+(i+1)+' di '+n+'</p><h2>'+esc(a.name)+'</h2><p class="desc">'+esc(a.text)+'</p>'+snHtml('citAreas',a.id)+'</article>';
+  if(!edit)return '<article class="parch">'+hidBar('citAreas',a)+photoImg(a)+'<p class="kick">Area '+(i+1)+' di '+n+'</p><h2>'+esc(a.name)+'</h2><p class="desc">'+esc(a.text)+'</p>'+snHtml('citAreas',a.id)+'</article>';
   var b='citAreas|'+a.id+'|';
-  return '<article class="parch"><p class="kick">Modifica area '+(i+1)+' di '+n+'</p>'+
+  return '<article class="parch">'+hidBar('citAreas',a)+'<p class="kick">Modifica area '+(i+1)+' di '+n+'</p>'+
     '<div class="fld"><label for="ca-n">Nome</label><input id="ca-n" data-b="'+b+'name" value="'+esc(a.name)+'"></div>'+
     '<div class="fld"><label for="ca-t">Descrizione</label><textarea id="ca-t" rows="3" data-b="'+b+'text">'+esc(a.text)+'</textarea></div>'+
     photoField('citAreas',a)+'<p class="hint">Trascina il numero sulla pianta per spostarlo.</p>'+ctl('citAreas',a.id,i,n)+'</article>';
@@ -525,6 +525,7 @@ function act(el,e){
   if(a==='delmem'){var dg=byId('guilds',id),mk='mem:'+el.getAttribute('data-mid');if(!dg||!ISOWNER)return;
     if(armed===mk){dg.members=(dg.members||[]).filter(function(x){return x.id!==el.getAttribute('data-mid')});armed=null;setDirty();render();return}
     armed=mk;render();setTimeout(function(){if(armed===mk){armed=null;render()}},3500);return}
+  if(a==='hideh'){var hi=byId(coll,id);if(!hi||!ISOWNER)return;hi.hid=true;hi.revealed=false;setDirty();render();save();return}
   if(a==='revealh'){var hit=byId(coll,id);if(!hit||!ISOWNER||!hit.hid)return;hit.revealed=!hit.revealed;setDirty();render();save();return}
   if(a==='reveal'){var rit=byId('custodi',id);if(!rit||!ISOWNER)return;rit.revealed=!rit.revealed;setDirty();render();save();return}
   if(a==='save'){save();return}
@@ -614,7 +615,8 @@ app.addEventListener('pointercancel',endDrag);
 
 /* in questa versione il salvataggio e' unico: ogni modifica segna la pagina come da salvare */
 function hidBar(c,it){
-  if(!ISOWNER||!it.hid)return '';
+  if(!ISOWNER)return '';
+  if(!it.hid)return '<div class="ctl" style="margin:0 0 12px;align-items:center"><span class="secret" style="margin:0;background:#2f6b3a">Visibile ai giocatori</span><button class="btn small" data-act="hideh" data-coll="'+c+'" data-id="'+it.id+'">Nascondi ai giocatori</button></div>';
   return '<div class="ctl" style="margin:0 0 12px;align-items:center"><span class="secret" style="margin:0'+(it.revealed?';background:#2f6b3a':'')+'">'+(it.revealed?'Rivelato ai giocatori':'Nascosto ai giocatori')+'</span><button class="btn small'+(it.revealed?' danger':' pri')+'" data-act="revealh" data-coll="'+c+'" data-id="'+it.id+'">'+(it.revealed?'Nascondi di nuovo':'Rivela ai giocatori')+'</button></div>';
 }
 function wMember(){setDirty()}function wHid(){setDirty()}function wNotes(){setDirty()}function wMeta(){setDirty()}function wOrder(){setDirty()}function wDelete(){setDirty()}function wHidDelete(){setDirty()}function wHidOrder(){}
