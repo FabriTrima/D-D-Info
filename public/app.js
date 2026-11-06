@@ -6,8 +6,8 @@ var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){r
 var CL='<'+'/';
 var HEAD='<title>Karak-Dûran'+CL+'title><meta name="claude:viewport-fit-sides" content="cover"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,700;1,400&family=Alegreya+Sans+SC:wght@500;700&family=Cinzel:wght@500;700&display=swap">';
 var RESET=':root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}';
-var TABS=['mappa','societa','consiglio','gilde','brace','cittadella'];
-var TABNAME={mappa:'Mappa',societa:'Società',consiglio:'Consiglio',gilde:'Gilde',brace:'I Custodi della Brace',cittadella:'Cittadella Reale'};
+var TABS=['mappa','societa','consiglio','gilde','brace','cittadella','note'];
+var TABNAME={mappa:'Mappa',societa:'Società',consiglio:'Consiglio',gilde:'Gilde',brace:'I Custodi della Brace',cittadella:'Cittadella Reale',note:'Le mie note'};
 var TYPES={
   building:{label:'Edificio principale',color:'--gold'},
   residential:{label:'Quartiere residenziale',color:'--stone-hi'},
@@ -38,7 +38,7 @@ var app=$('#app');
 var NCOLL=['locations','society','guilds','council'];
 var ISOWNER=(window.KD_MODE==='master'),KEY=load('kd-key')||'',loaded=false,lastSig='';
 var ART=null,ASSETS=null,uploading=false,photoTarget=null,edit=false,dirty=false,filter=null,armed=null,msg='',msgErr=false,saving=false,draft=null,drag=null;
-function tabVisible(t){return t!=='brace'||ISOWNER||S.custodi.length>0}
+function tabVisible(t){if(t==='note')return !ISOWNER;return t!=='brace'||ISOWNER||S.custodi.length>0}
 function tabFromHash(){var h=location.hash.slice(1);return TABS.indexOf(h)>=0&&tabVisible(h)?h:'mappa'}
 var tab=tabFromHash();
 var sel=(function(){try{var v=JSON.parse(load('kd-sel'));if(v&&v.k&&v.id)return v}catch(e){}return {k:'loc',id:'afgoria'}})();
@@ -331,6 +331,18 @@ function memberHtml(it,i,n){
     '<div class="fld"><label for="km-'+q+'">Note del Master</label><textarea id="km-'+q+'" rows="2" data-b="'+b+'notes" placeholder="Segreti, obiettivi, reazioni ai PG...">'+esc(it.notes)+'</textarea></div>'+
     photoField('custodi',it)+ctl('custodi',it.id,i,n)+'</div>';
 }
+/* note personali dei giocatori: restano nel browser, non vanno al server */
+var PN=[],pnOk=true,pnT=null,pnMsg='';
+(function(){try{var r=localStorage.getItem('kd-pnotes');PN=r?JSON.parse(r):[];if(!Array.isArray(PN))PN=[]}catch(e){PN=[];pnOk=false}})();
+function pnSave(){try{localStorage.setItem('kd-pnotes',JSON.stringify(PN));pnOk=true}catch(e){pnOk=false}var el=document.getElementById('pn-st');if(el)el.textContent=pnOk?'Salvato su questo dispositivo':'Impossibile salvare: il browser blocca la memoria locale'}
+function pnLater(){var el=document.getElementById('pn-st');if(el)el.textContent='Salvataggio...';clearTimeout(pnT);pnT=setTimeout(pnSave,400)}
+function notesView(){
+  return '<section><h2 class="sech">Le mie note</h2><p class="desc">Appunti personali: restano salvati solo su questo dispositivo e in questo browser. Il Master non li vede. Se cancelli i dati del browser vengono persi: usa "Scarica" per tenerne una copia.</p>'+
+   '<div class="ctl"><button class="btn pri" data-act="pnadd">Nuova nota</button>'+(PN.length?'<button class="btn" data-act="pndl">Scarica le mie note</button>':'')+'<span id="pn-st" class="desc" style="margin-left:8px">'+(pnOk?'':'Impossibile salvare: il browser blocca la memoria locale')+'</span></div>'+
+   (PN.length?PN.map(function(n){return '<article class="card" style="margin-top:14px"><div class="fld"><label for="pt-'+n.id+'">Titolo</label><input id="pt-'+n.id+'" type="text" data-pn="'+n.id+'|title" value="'+esc(n.title)+'"></div>'+
+     '<div class="fld"><label for="px-'+n.id+'">Testo</label><textarea id="px-'+n.id+'" rows="6" data-pn="'+n.id+'|text">'+esc(n.text)+'</textarea></div>'+
+     '<button class="btn small danger" data-act="pndel" data-id="'+n.id+'">'+(armed==='pn:'+n.id?'Conferma eliminazione':'Elimina nota')+'</button></article>'}).join(''):'<p class="desc" style="margin-top:14px">Nessuna nota. Premi "Nuova nota" per iniziare.</p>')+'</section>';
+}
 function braceView(){
   var n=S.custodi.length,ed=edit&&ISOWNER;
   var head=ed?
@@ -425,7 +437,7 @@ function render(){
   if(!loaded)return;
   var y=window.scrollY;
   ensureSel();
-  var v=tab==='societa'?societyView():tab==='consiglio'?councilView():tab==='gilde'?guildView():tab==='brace'?braceView():tab==='cittadella'?citView():mapView();
+  var v=tab==='societa'?societyView():tab==='consiglio'?councilView():tab==='gilde'?guildView():tab==='brace'?braceView():tab==='note'?notesView():tab==='cittadella'?citView():mapView();
   app.innerHTML='<div class="wrap">'+headerHtml()+tabsHtml()+'<main role="tabpanel" aria-labelledby="tab-'+tab+'">'+v+'</main>'+footHtml()+'</div><div class="bar" id="bar" hidden></div>';
   renderBar();
   window.scrollTo(0,y);
@@ -474,6 +486,9 @@ function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function act(el,e){
   var a=el.getAttribute('data-act'),id=el.getAttribute('data-id'),coll=el.getAttribute('data-coll');
   if(a==='tab'){location.hash=id;return}
+  if(a==='pnadd'){PN.unshift({id:uid('n'),title:'',text:''});pnSave();render();return}
+  if(a==='pndel'){if(armed==='pn:'+id){PN=PN.filter(function(n){return n.id!==id});armed=null;pnSave()}else armed='pn:'+id;render();return}
+  if(a==='pndl'){var tx=PN.map(function(n){return (n.title||'Senza titolo')+'\n'+n.text}).join('\n\n----\n\n');var bl=new Blob([tx],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(bl),l=document.createElement('a');l.href=u;l.download='le-mie-note.txt';document.body.appendChild(l);l.click();l.remove();setTimeout(function(){URL.revokeObjectURL(u)},1000);return}
   if(a==='sel'){sel={k:'loc',id:id};store('kd-sel',JSON.stringify(sel));render();return}
   if(a==='selz'){sel={k:'zone',id:id};store('kd-sel',JSON.stringify(sel));render();return}
   if(a==='filter'){filter=filter===id?null:id;refreshMap();return}
@@ -528,6 +543,8 @@ app.addEventListener('keydown',function(e){
 });
 app.addEventListener('input',function(e){
   var t=e.target,b=t.getAttribute&&t.getAttribute('data-b');
+  var pn=t.getAttribute&&t.getAttribute('data-pn');
+  if(pn){var q=pn.split('|'),n0=PN.filter(function(x){return x.id===q[0]})[0];if(n0){n0[q[1]]=t.value;pnLater()}return}
   if(!b)return;
   var p=b.split('|'),c=p[0],id=p[1],f=p[2],v=t.type==='checkbox'?t.checked:t.value;
   if(c==='gmem'){var q=id.split(':'),g0=byId('guilds',q[0]),m0=g0&&(g0.members||[]).filter(function(x){return x.id===q[1]})[0];if(m0&&ISOWNER){m0[f]=v;setDirty()}return}
@@ -635,6 +652,7 @@ if(!ISOWNER){
     if(document.hidden)return;
     fetch('/api/public',{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){
       var sig=JSON.stringify(d);if(sig===lastSig)return;
+      var ae=document.activeElement;if(ae&&app.contains(ae)&&/^(INPUT|TEXTAREA)$/.test(ae.tagName))return;
       lastSig=sig;
       if(d.empty){return}
       S=d;norm();var wasLoaded=loaded;loaded=true;tab=tabFromHash();render();
