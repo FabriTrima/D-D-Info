@@ -10,8 +10,8 @@ export function publicView(S) {
   for (const c of NCOLL) {
     P[c] = (P[c] || []).filter((it) => !(it.hid && !it.revealed));
     P[c].forEach((it) => {
-      if (!(c === 'guilds' && it.notesRevealed)) delete it.notes;
-      delete it.hid; delete it.revealed; delete it.notesRevealed;
+      delete it.notes; delete it.hid; delete it.revealed; delete it.notesRevealed;
+      if (c === 'guilds') it.members = (it.members || []).filter((m) => m.revealed).map((m) => ({ id: m.id, name: m.name, text: m.text, revealed: true }));
     });
   }
   P.custodi = (P.custodi || []).filter((m) => m.revealed);

@@ -184,19 +184,33 @@ function ctl(coll,id,i,n){
     '<button class="btn small" data-act="mv" data-coll="'+coll+'" data-id="'+id+'" data-d="1" aria-label="Sposta giù"'+(i===n-1?' disabled':'')+'>Giù</button>'+
     '<button class="btn small danger" data-act="delitem" data-coll="'+coll+'" data-id="'+id+'">'+(armed===key?'Conferma eliminazione':'Elimina')+'</button></div>';
 }
-function memBar(c,it){
-  if(!ISOWNER||c!=='guilds')return '';
-  var on=!!it.notesRevealed;
-  return '<div class="ctl" style="margin:0 0 12px;align-items:center"><span class="secret" style="margin:0'+(on?';background:#2f6b3a':'')+'">'+(on?'Membri visibili ai giocatori':'Membri nascosti ai giocatori')+'</span><button class="btn small'+(on?' danger':' pri')+'" data-act="togmem" data-coll="guilds" data-id="'+it.id+'">'+(on?'Nascondi i membri':'Mostra i membri ai giocatori')+'</button></div>';
+function membersHtml(coll,it){
+  if(coll!=='guilds')return '';
+  var ms=(it.members||[]).filter(function(m){return ISOWNER||m.revealed});
+  if(!ms.length)return '';
+  return '<div class="mnote"><h4>Membri della gilda</h4>'+ms.map(function(m){
+    return '<div style="margin-top:10px"><b>'+esc(m.name)+'</b>'+(ISOWNER?' <span class="secret" style="margin:0 6px'+(m.revealed?';background:#2f6b3a':'')+'">'+(m.revealed?'Visibile ai giocatori':'Nascosto ai giocatori')+'</span><button class="btn small'+(m.revealed?' danger':' pri')+'" data-act="togmem" data-id="'+it.id+'" data-mid="'+m.id+'">'+(m.revealed?'Nascondi':'Rivela ai giocatori')+'</button>':'')+'<p>'+esc(m.text)+'</p></div>';
+  }).join('')+'</div>';
+}
+function membersEdit(coll,it){
+  if(coll!=='guilds'||!ISOWNER)return '';
+  var ms=it.members||[];
+  return '<div class="fld"><span class="fl">Membri della gilda</span>'+ms.map(function(m){
+    var b='gmem|'+it.id+':'+m.id+'|',k='mem:'+m.id;
+    return '<div class="card dark" style="margin-top:8px;padding:10px"><div class="fld"><label for="gn-'+m.id+'">Nome</label><input id="gn-'+m.id+'" data-b="'+b+'name" value="'+esc(m.name)+'"></div>'+
+      '<div class="fld"><label for="gt-'+m.id+'">Descrizione</label><textarea id="gt-'+m.id+'" rows="4" data-b="'+b+'text">'+esc(m.text)+'</textarea></div>'+
+      '<div class="ctl"><span class="secret" style="margin:0 6px 0 0'+(m.revealed?';background:#2f6b3a':'')+'">'+(m.revealed?'Visibile ai giocatori':'Nascosto ai giocatori')+'</span><button class="btn small'+(m.revealed?' danger':' pri')+'" data-act="togmem" data-id="'+it.id+'" data-mid="'+m.id+'">'+(m.revealed?'Nascondi':'Rivela ai giocatori')+'</button>'+
+      '<button class="btn small danger" data-act="delmem" data-id="'+it.id+'" data-mid="'+m.id+'">'+(armed===k?'Conferma eliminazione':'Elimina')+'</button></div></div>';
+  }).join('')+'<div class="ctl"><button class="btn small" data-act="addmem" data-id="'+it.id+'">Aggiungi membro</button></div></div>';
 }
 function itemHtml(coll,it,i,n){
   if(!edit){
-    return '<div class="card">'+hidBar(coll,it)+memBar(coll,it)+photoImg(it)+'<h3>'+esc(it.name)+'</h3><p>'+esc(it.text)+'</p>'+(coll==='society'&&it.id==='s2'&&S.council.length?'<p><button class="btn small" data-act="tab" data-id="consiglio">Vedi i membri del Consiglio</button></p>':'')+(it.notes?'<div class="mnote"><h4>'+(coll==='guilds'?'Membri della gilda':'Note del Master')+'</h4><p>'+esc(it.notes)+'</p></div>':'')+'</div>';
+    return '<div class="card">'+hidBar(coll,it)+photoImg(it)+'<h3>'+esc(it.name)+'</h3><p>'+esc(it.text)+'</p>'+(coll==='society'&&it.id==='s2'&&S.council.length?'<p><button class="btn small" data-act="tab" data-id="consiglio">Vedi i membri del Consiglio</button></p>':'')+membersHtml(coll,it)+(it.notes?'<div class="mnote"><h4>Note del Master</h4><p>'+esc(it.notes)+'</p></div>':'')+'</div>';
   }
   var b=coll+'|'+it.id+'|';
-  return '<div class="card dark">'+hidBar(coll,it)+memBar(coll,it)+'<div class="fld"><label for="n-'+it.id+'">Nome</label><input id="n-'+it.id+'" data-b="'+b+'name" value="'+esc(it.name)+'"></div>'+
+  return '<div class="card dark">'+hidBar(coll,it)+'<div class="fld"><label for="n-'+it.id+'">Nome</label><input id="n-'+it.id+'" data-b="'+b+'name" value="'+esc(it.name)+'"></div>'+
     '<div class="fld"><label for="t-'+it.id+'">Descrizione</label><textarea id="t-'+it.id+'" rows="3" data-b="'+b+'text">'+esc(it.text)+'</textarea></div>'+
-    (ISOWNER?'<div class="fld"><label for="m-'+it.id+'">'+(coll==='guilds'?'Membri della gilda (e note)':'Note del Master')+'</label><textarea id="m-'+it.id+'" rows="2" data-b="'+b+'notes" placeholder="Agganci, PNG, segreti...">'+esc(it.notes)+'</textarea></div>':'')+photoField(coll,it)+ctl(coll,it.id,i,n)+'</div>';
+    (ISOWNER?'<div class="fld"><label for="m-'+it.id+'">Note del Master</label><textarea id="m-'+it.id+'" rows="2" data-b="'+b+'notes" placeholder="Agganci, PNG, segreti...">'+esc(it.notes)+'</textarea></div>':'')+membersEdit(coll,it)+photoField(coll,it)+ctl(coll,it.id,i,n)+'</div>';
 }
 function societyView(){
   var n=S.society.length;
@@ -457,7 +471,11 @@ function act(el,e){
   if(a==='csel'){csel=id;render();return}
   if(a==='photo'){if(uploading||!ASSETS)return;photoTarget={coll:coll,id:id};fin.value='';fin.click();return}
   if(a==='rmphoto'){var pit=byId(coll,id);if(pit){pit.photo=null;if(coll==='custodi')wMember(pit,true);else if(pit.hid)wHid(coll,pit,true);else setDirty();render()}return}
-  if(a==='togmem'){var mi=byId(coll,id);if(!mi||!ISOWNER)return;mi.notesRevealed=!mi.notesRevealed;setDirty();render();save();return}
+  if(a==='togmem'){var gg=byId('guilds',id),gm=gg&&(gg.members||[]).filter(function(x){return x.id===el.getAttribute('data-mid')})[0];if(!gm||!ISOWNER)return;gm.revealed=!gm.revealed;setDirty();render();save();return}
+  if(a==='addmem'){var ag=byId('guilds',id);if(!ag||!ISOWNER)return;ag.members=ag.members||[];ag.members.push({id:uid('m'),name:'Nuovo membro',text:'',revealed:false});setDirty();render();return}
+  if(a==='delmem'){var dg=byId('guilds',id),mk='mem:'+el.getAttribute('data-mid');if(!dg||!ISOWNER)return;
+    if(armed===mk){dg.members=(dg.members||[]).filter(function(x){return x.id!==el.getAttribute('data-mid')});armed=null;setDirty();render();return}
+    armed=mk;render();setTimeout(function(){if(armed===mk){armed=null;render()}},3500);return}
   if(a==='revealh'){var hit=byId(coll,id);if(!hit||!ISOWNER||!hit.hid)return;hit.revealed=!hit.revealed;setDirty();render();save();return}
   if(a==='reveal'){var rit=byId('custodi',id);if(!rit||!ISOWNER)return;rit.revealed=!rit.revealed;setDirty();render();save();return}
   if(a==='save'){save();return}
@@ -500,6 +518,7 @@ app.addEventListener('input',function(e){
   var t=e.target,b=t.getAttribute&&t.getAttribute('data-b');
   if(!b)return;
   var p=b.split('|'),c=p[0],id=p[1],f=p[2],v=t.type==='checkbox'?t.checked:t.value;
+  if(c==='gmem'){var q=id.split(':'),g0=byId('guilds',q[0]),m0=g0&&(g0.members||[]).filter(function(x){return x.id===q[1]})[0];if(m0&&ISOWNER){m0[f]=v;setDirty()}return}
   if(!c){S[f]=v}else{var it=byId(c,id);if(!it)return;it[f]=v}
   if(it&&it.hid&&NCOLL.indexOf(c)>=0){if(ISOWNER)wHid(c,it);return}
   if(f==='notes'&&NCOLL.indexOf(c)>=0){if(ISOWNER)wNotes();return}
@@ -548,7 +567,15 @@ function hidBar(c,it){
 function wMember(){setDirty()}function wHid(){setDirty()}function wNotes(){setDirty()}function wMeta(){setDirty()}function wOrder(){setDirty()}function wDelete(){setDirty()}function wHidDelete(){setDirty()}function wHidOrder(){}
 window.addEventListener('hashchange',function(){tab=tabFromHash();if(loaded)render()});
 
+var migrated=false;
+function splitMembers(txt,rev){
+  return String(txt||'').split(/\n\s*\n/).map(function(t){return t.replace(/\s*\n\s*/g,' ').trim()}).filter(Boolean).map(function(t){
+    var m=t.match(/^(.+?)\s*(?:\(|\s[-\u2013\u2014]\s)/);
+    return {id:uid('m'),name:m?m[1].trim():t.split(/\s+/).slice(0,2).join(' '),text:t,revealed:!!rev};
+  });
+}
 function norm(){
+  if(ISOWNER&&S.guilds)S.guilds.forEach(function(g){if(!g.members){g.members=splitMembers(g.notes,g.notesRevealed);g.notes='';delete g.notesRevealed;migrated=true}});
   S.council=S.council||[];S.councilIntro=S.councilIntro||'';S.custodi=S.custodi||[];S.custodiTitle=S.custodiTitle||'I Custodi della Brace';S.custodiIntro=S.custodiIntro||'';
   S.citTitle=S.citTitle||'La Cittadella Reale';S.citIntro=S.citIntro||'';S.citFeatures=S.citFeatures||'';S.citAtmos=S.citAtmos||'';S.citAreas=S.citAreas||[];
   S.citmap=(S.citmap&&S.citmap.length)?S.citmap:[{id:'m1',name:'Pianta della Cittadella Reale',photo:null}];
@@ -584,6 +611,7 @@ function startUp(d){
     ASSETS={upload:function(b){return api('/api/upload',{method:'POST',headers:{'content-type':b.type||'image/jpeg'},body:b}).then(function(r){if(!r.ok)throw {code:r.status===401?'auth':'http'};return r.json()})}};
   }
   render();
+  if(migrated){migrated=false;setDirty();save()}
 }
 function boot(){
   fetchState().then(startUp).catch(function(){app.innerHTML='<div class="wrap" style="padding-top:12vh"><p class="tag">Non riesco a contattare il server. Riprova tra poco.</p></div>'});
