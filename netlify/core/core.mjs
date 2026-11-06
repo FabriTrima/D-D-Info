@@ -11,6 +11,8 @@ export function publicView(S) {
     P[c] = (P[c] || []).filter((it) => !(it.hid && !it.revealed));
     P[c].forEach((it) => {
       delete it.notes; delete it.hid; delete it.revealed; delete it.notesRevealed;
+      if ((c === 'guilds' || c === 'council') && !it.photoRevealed) delete it.photo;
+      delete it.photoRevealed;
       if (c === 'guilds') it.members = (it.members || []).filter((m) => m.revealed).map((m) => ({ id: m.id, name: m.name, text: m.text, revealed: true }));
     });
   }

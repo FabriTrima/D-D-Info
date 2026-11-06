@@ -184,6 +184,11 @@ function ctl(coll,id,i,n){
     '<button class="btn small" data-act="mv" data-coll="'+coll+'" data-id="'+id+'" data-d="1" aria-label="Sposta giù"'+(i===n-1?' disabled':'')+'>Giù</button>'+
     '<button class="btn small danger" data-act="delitem" data-coll="'+coll+'" data-id="'+id+'">'+(armed===key?'Conferma eliminazione':'Elimina')+'</button></div>';
 }
+function photoBar(c,it){
+  if(!ISOWNER||(c!=='guilds'&&c!=='council')||!photoSrc(it.photo))return '';
+  var on=!!it.photoRevealed;
+  return '<div class="ctl" style="margin:0 0 12px;align-items:center"><span class="secret" style="margin:0'+(on?';background:#2f6b3a':'')+'">'+(on?'Foto visibile ai giocatori':'Foto nascosta ai giocatori')+'</span><button class="btn small'+(on?' danger':' pri')+'" data-act="togphoto" data-coll="'+c+'" data-id="'+it.id+'">'+(on?'Nascondi foto':'Mostra foto ai giocatori')+'</button></div>';
+}
 function membersHtml(coll,it){
   if(coll!=='guilds')return '';
   var ms=(it.members||[]).filter(function(m){return ISOWNER||m.revealed});
@@ -205,10 +210,10 @@ function membersEdit(coll,it){
 }
 function itemHtml(coll,it,i,n){
   if(!edit){
-    return '<div class="card">'+hidBar(coll,it)+photoImg(it)+'<h3>'+esc(it.name)+'</h3><p>'+esc(it.text)+'</p>'+(coll==='society'&&it.id==='s2'&&S.council.length?'<p><button class="btn small" data-act="tab" data-id="consiglio">Vedi i membri del Consiglio</button></p>':'')+membersHtml(coll,it)+(it.notes?'<div class="mnote"><h4>Note del Master</h4><p>'+esc(it.notes)+'</p></div>':'')+'</div>';
+    return '<div class="card">'+hidBar(coll,it)+photoBar(coll,it)+photoImg(it)+'<h3>'+esc(it.name)+'</h3><p>'+esc(it.text)+'</p>'+(coll==='society'&&it.id==='s2'&&S.council.length?'<p><button class="btn small" data-act="tab" data-id="consiglio">Vedi i membri del Consiglio</button></p>':'')+membersHtml(coll,it)+(it.notes?'<div class="mnote"><h4>Note del Master</h4><p>'+esc(it.notes)+'</p></div>':'')+'</div>';
   }
   var b=coll+'|'+it.id+'|';
-  return '<div class="card dark">'+hidBar(coll,it)+'<div class="fld"><label for="n-'+it.id+'">Nome</label><input id="n-'+it.id+'" data-b="'+b+'name" value="'+esc(it.name)+'"></div>'+
+  return '<div class="card dark">'+hidBar(coll,it)+photoBar(coll,it)+'<div class="fld"><label for="n-'+it.id+'">Nome</label><input id="n-'+it.id+'" data-b="'+b+'name" value="'+esc(it.name)+'"></div>'+
     '<div class="fld"><label for="t-'+it.id+'">Descrizione</label><textarea id="t-'+it.id+'" rows="3" data-b="'+b+'text">'+esc(it.text)+'</textarea></div>'+
     (ISOWNER?'<div class="fld"><label for="m-'+it.id+'">Note del Master</label><textarea id="m-'+it.id+'" rows="2" data-b="'+b+'notes" placeholder="Agganci, PNG, segreti...">'+esc(it.notes)+'</textarea></div>':'')+membersEdit(coll,it)+photoField(coll,it)+ctl(coll,it.id,i,n)+'</div>';
 }
@@ -272,13 +277,13 @@ fin.addEventListener('change',function(){
 function houseHtml(it,i,n){
   if(!edit){
     var img=photoImg(it,'pt')||'<div class="pt empty" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor">'+ICON.guild+'</svg></div>';
-    return '<article class="house">'+img+'<div class="hb"><p class="hk">'+esc(it.house)+'</p><h3>'+esc(it.name)+'</h3><p class="hr">'+esc(it.role)+(it.age?' · '+esc(it.age)+' anni':'')+'</p>'+
+    return '<article class="house">'+img+'<div class="hb">'+photoBar('council',it)+'<p class="hk">'+esc(it.house)+'</p><h3>'+esc(it.name)+'</h3><p class="hr">'+esc(it.role)+(it.age?' · '+esc(it.age)+' anni':'')+'</p>'+
       (it.domain?'<p class="dom"><span>Dominio</span>'+esc(it.domain)+'</p>':'')+
       '<p class="ht">'+esc(it.text)+'</p>'+(it.motto?'<p class="motto">«'+esc(it.motto)+'»</p>':'')+
       (it.notes?'<div class="mnote"><h4>Note del Master</h4><p>'+esc(it.notes)+'</p></div>':'')+'</div></article>';
   }
   var b='council|'+it.id+'|',q=it.id;
-  return '<div class="card dark">'+
+  return '<div class="card dark">'+photoBar('council',it)+
     '<div class="fld"><label for="n-'+q+'">Casata</label><input id="n-'+q+'" data-b="'+b+'house" value="'+esc(it.house)+'"></div>'+
     '<div class="row2"><div class="fld"><label for="cn-'+q+'">Nome del capocasata</label><input id="cn-'+q+'" data-b="'+b+'name" value="'+esc(it.name)+'"></div>'+
     '<div class="fld"><label for="ca-'+q+'">Età</label><input id="ca-'+q+'" inputmode="numeric" style="width:6em" data-b="'+b+'age" value="'+esc(it.age)+'"></div></div>'+
@@ -471,6 +476,7 @@ function act(el,e){
   if(a==='csel'){csel=id;render();return}
   if(a==='photo'){if(uploading||!ASSETS)return;photoTarget={coll:coll,id:id};fin.value='';fin.click();return}
   if(a==='rmphoto'){var pit=byId(coll,id);if(pit){pit.photo=null;if(coll==='custodi')wMember(pit,true);else if(pit.hid)wHid(coll,pit,true);else setDirty();render()}return}
+  if(a==='togphoto'){var pt=byId(coll,id);if(!pt||!ISOWNER)return;pt.photoRevealed=!pt.photoRevealed;setDirty();render();save();return}
   if(a==='togmem'){var gg=byId('guilds',id),gm=gg&&(gg.members||[]).filter(function(x){return x.id===el.getAttribute('data-mid')})[0];if(!gm||!ISOWNER)return;gm.revealed=!gm.revealed;setDirty();render();save();return}
   if(a==='addmem'){var ag=byId('guilds',id);if(!ag||!ISOWNER)return;ag.members=ag.members||[];ag.members.push({id:uid('m'),name:'Nuovo membro',text:'',revealed:false});setDirty();render();return}
   if(a==='delmem'){var dg=byId('guilds',id),mk='mem:'+el.getAttribute('data-mid');if(!dg||!ISOWNER)return;
