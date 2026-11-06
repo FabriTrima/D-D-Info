@@ -147,7 +147,7 @@ function detailHtml(){
       h='<article class="parch">'+hidBar('locations',l)+photoImg(l)+'<p class="kick"><span class="tchip">'+icon(l.type,16,T.color)+'</span>'+esc(T.label)+' · '+esc(lv.name)+'</p><h2>'+esc(l.name)+'</h2>'+
         (l.secret?'<span class="secret">Segreto ben custodito</span>':'')+
         '<p class="desc">'+esc(l.desc)+'</p>'+
-        (l.notes?'<div class="mnote"><h3>Note del Master</h3><p>'+esc(l.notes)+'</p></div>':'')+'</article>';
+        (l.notes?'<div class="mnote"><h3>Note del Master</h3><p>'+esc(l.notes)+'</p></div>':'')+snHtml('locations',l.id)+'</article>';
     }else{
       var opts=Object.keys(TYPES).map(function(k){return '<option value="'+k+'"'+(k===l.type?' selected':'')+'>'+TYPES[k].label+'</option>'}).join('');
       h='<article class="parch">'+hidBar('locations',l)+'<p class="kick">Modifica luogo · livello: '+esc(lv.name)+'</p>'+
@@ -215,7 +215,7 @@ function membersEdit(coll,it){
 }
 function itemHtml(coll,it,i,n){
   if(!edit){
-    return '<div class="card">'+hidBar(coll,it)+photoBar(coll,it)+photoImg(it)+'<h3>'+esc(it.name)+'</h3><p>'+esc(it.text)+'</p>'+(coll==='society'&&it.id==='s2'&&S.council.length?'<p><button class="btn small" data-act="tab" data-id="consiglio">Vedi i membri del Consiglio</button></p>':'')+membersHtml(coll,it)+(it.notes?'<div class="mnote"><h4>Note del Master</h4><p>'+esc(it.notes)+'</p></div>':'')+'</div>';
+    return '<div class="card">'+hidBar(coll,it)+photoBar(coll,it)+photoImg(it)+'<h3>'+esc(it.name)+'</h3><p>'+esc(it.text)+'</p>'+(coll==='society'&&it.id==='s2'&&S.council.length?'<p><button class="btn small" data-act="tab" data-id="consiglio">Vedi i membri del Consiglio</button></p>':'')+membersHtml(coll,it)+(it.notes?'<div class="mnote"><h4>Note del Master</h4><p>'+esc(it.notes)+'</p></div>':'')+snHtml(coll,it.id)+'</div>';
   }
   var b=coll+'|'+it.id+'|';
   return '<div class="card dark">'+hidBar(coll,it)+photoBar(coll,it)+'<div class="fld"><label for="n-'+it.id+'">Nome</label><input id="n-'+it.id+'" data-b="'+b+'name" value="'+esc(it.name)+'"></div>'+
@@ -285,7 +285,7 @@ function houseHtml(it,i,n){
     return '<article class="house">'+img+'<div class="hb">'+houseBar(it)+photoBar('council',it)+'<p class="hk">'+esc(it.house)+'</p><h3>'+esc(it.name)+'</h3><p class="hr">'+esc(it.role)+(it.age?' · '+esc(it.age)+' anni':'')+'</p>'+
       (it.domain?'<p class="dom"><span>Dominio</span>'+esc(it.domain)+'</p>':'')+
       '<p class="ht">'+esc(it.text)+'</p>'+(it.motto?'<p class="motto">«'+esc(it.motto)+'»</p>':'')+
-      (it.notes?'<div class="mnote"><h4>Note del Master</h4><p>'+esc(it.notes)+'</p></div>':'')+'</div></article>';
+      (it.notes?'<div class="mnote"><h4>Note del Master</h4><p>'+esc(it.notes)+'</p></div>':'')+snHtml('council',it.id)+'</div></article>';
   }
   var b='council|'+it.id+'|',q=it.id;
   return '<div class="card dark">'+houseBar(it)+photoBar('council',it)+
@@ -319,7 +319,7 @@ function memberHtml(it,i,n){
     var meta=[it.race,it.age?it.age+' anni':''].filter(Boolean).join(' · ');
     return '<article class="house">'+img+'<div class="hb">'+revBar(it)+(it.title?'<p class="hk">'+esc(it.title)+'</p>':'')+'<h3>'+esc(it.name)+'</h3>'+(meta?'<p class="hr">'+esc(meta)+'</p>':'')+
       '<p class="ht">'+esc(it.text)+'</p>'+
-      (it.notes?'<div class="mnote"><h4>Note del Master</h4><p>'+esc(it.notes)+'</p></div>':'')+'</div></article>';
+      (it.notes?'<div class="mnote"><h4>Note del Master</h4><p>'+esc(it.notes)+'</p></div>':'')+snHtml('custodi',it.id)+'</div></article>';
   }
   var b='custodi|'+it.id+'|',q=it.id;
   return '<div class="card dark">'+revBar(it)+
@@ -342,6 +342,22 @@ function notesView(){
    (PN.length?PN.map(function(n){return '<article class="card" style="margin-top:14px"><div class="fld"><label for="pt-'+n.id+'">Titolo</label><input id="pt-'+n.id+'" type="text" data-pn="'+n.id+'|title" value="'+esc(n.title)+'"></div>'+
      '<div class="fld"><label for="px-'+n.id+'">Testo</label><textarea id="px-'+n.id+'" rows="6" data-pn="'+n.id+'|text">'+esc(n.text)+'</textarea></div>'+
      '<button class="btn small danger" data-act="pndel" data-id="'+n.id+'">'+(armed==='pn:'+n.id?'Conferma eliminazione':'Elimina nota')+'</button></article>'}).join(''):'<p class="desc" style="margin-top:14px">Nessuna nota. Premi "Nuova nota" per iniziare.</p>')+'</section>';
+}
+/* note condivise dentro ogni scheda */
+var snT={};
+function snName(){try{return localStorage.getItem('kd-pname')||''}catch(e){return ''}}
+function snHtml(coll,id){
+  var k=coll+':'+id,L=(S.pnotes&&S.pnotes[k])||[];
+  return '<div class="mnote pnotes"><h4>Note dei giocatori</h4><p class="desc" style="margin:2px 0 8px">Condivise: le vedono e le modificano tutti.</p>'+
+   L.map(function(e){return '<div class="sn" style="margin:0 0 10px"><div class="desc" style="margin:0 0 3px"><b>'+esc(e.by||'Anonimo')+'</b></div>'+
+     '<textarea rows="3" aria-label="Nota di '+esc(e.by||'Anonimo')+'" style="width:100%;box-sizing:border-box" data-sn="'+k+'|'+e.id+'">'+esc(e.text)+'</textarea>'+
+     '<button class="btn small danger" data-act="sndel" data-k="'+k+'" data-id="'+e.id+'">'+(armed==='sn:'+e.id?'Conferma eliminazione':'Elimina nota')+'</button></div>'}).join('')+
+   '<div class="ctl" style="align-items:center">'+(ISOWNER?'':'<input type="text" maxlength="30" placeholder="Il tuo nome" aria-label="Il tuo nome" style="max-width:11em" data-pname="1" value="'+esc(snName())+'"> ')+
+   '<button class="btn small" data-act="snadd" data-k="'+k+'">Aggiungi nota</button></div></div>';
+}
+function snPost(k,nid,body){
+  body.key=k;body.nid=nid;
+  return api('/api/pnote',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}).catch(function(){});
 }
 function braceView(){
   var n=S.custodi.length,ed=edit&&ISOWNER;
@@ -486,6 +502,8 @@ function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function act(el,e){
   var a=el.getAttribute('data-act'),id=el.getAttribute('data-id'),coll=el.getAttribute('data-coll');
   if(a==='tab'){location.hash=id;return}
+  if(a==='snadd'){var k0=el.getAttribute('data-k'),nid=uid('e').replace(/[^A-Za-z0-9]/g,'');S.pnotes=S.pnotes||{};(S.pnotes[k0]=S.pnotes[k0]||[]).push({id:nid,by:ISOWNER?'Master':(snName()||'Anonimo'),text:''});snPost(k0,nid,{text:'',by:snName()});render();var ta=document.querySelector('[data-sn="'+k0+'|'+nid+'"]');if(ta)ta.focus();return}
+  if(a==='sndel'){var k1=el.getAttribute('data-k');if(armed==='sn:'+id){S.pnotes[k1]=(S.pnotes[k1]||[]).filter(function(e){return e.id!==id});armed=null;snPost(k1,id,{del:true})}else armed='sn:'+id;render();return}
   if(a==='pnadd'){PN.unshift({id:uid('n'),title:'',text:''});pnSave();render();return}
   if(a==='pndel'){if(armed==='pn:'+id){PN=PN.filter(function(n){return n.id!==id});armed=null;pnSave()}else armed='pn:'+id;render();return}
   if(a==='pndl'){var tx=PN.map(function(n){return (n.title||'Senza titolo')+'\n'+n.text}).join('\n\n----\n\n');var bl=new Blob([tx],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(bl),l=document.createElement('a');l.href=u;l.download='le-mie-note.txt';document.body.appendChild(l);l.click();l.remove();setTimeout(function(){URL.revokeObjectURL(u)},1000);return}
@@ -544,6 +562,9 @@ app.addEventListener('keydown',function(e){
 app.addEventListener('input',function(e){
   var t=e.target,b=t.getAttribute&&t.getAttribute('data-b');
   var pn=t.getAttribute&&t.getAttribute('data-pn');
+  if(t.getAttribute&&t.getAttribute('data-pname')){try{localStorage.setItem('kd-pname',t.value.trim().slice(0,30))}catch(x){}return}
+  var sn=t.getAttribute&&t.getAttribute('data-sn');
+  if(sn){var w=sn.split('|'),L1=(S.pnotes&&S.pnotes[w[0]])||[],e1=L1.filter(function(x){return x.id===w[1]})[0];if(e1){e1.text=t.value;clearTimeout(snT[sn]);snT[sn]=setTimeout(function(){snPost(w[0],w[1],{text:e1.text,by:snName()})},600)}return}
   if(pn){var q=pn.split('|'),n0=PN.filter(function(x){return x.id===q[0]})[0];if(n0){n0[q[1]]=t.value;pnLater()}return}
   if(!b)return;
   var p=b.split('|'),c=p[0],id=p[1],f=p[2],v=t.type==='checkbox'?t.checked:t.value;
@@ -604,6 +625,7 @@ function splitMembers(txt,rev){
   });
 }
 function norm(){
+  S.pnotes=S.pnotes||{};
   if(ISOWNER&&S.guilds)S.guilds.forEach(function(g){if(!g.members){g.members=splitMembers(g.notes,g.notesRevealed);g.notes='';delete g.notesRevealed;migrated=true}});
   S.council=S.council||[];S.councilIntro=S.councilIntro||'';S.custodi=S.custodi||[];S.custodiTitle=S.custodiTitle||'I Custodi della Brace';S.custodiIntro=S.custodiIntro||'';
   S.citTitle=S.citTitle||'La Cittadella Reale';S.citIntro=S.citIntro||'';S.citFeatures=S.citFeatures||'';S.citAtmos=S.citAtmos||'';S.citAreas=S.citAreas||[];
@@ -646,6 +668,17 @@ function boot(){
   fetchState().then(startUp).catch(function(){app.innerHTML='<div class="wrap" style="padding-top:12vh"><p class="tag">Non riesco a contattare il server. Riprova tra poco.</p></div>'});
 }
 
+if(ISOWNER){
+  var pnSig='';
+  setInterval(function(){
+    if(document.hidden||!KEY||!loaded)return;
+    api('/api/master/pnotes',{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(d){
+      if(!d)return;var sg=JSON.stringify(d);if(!pnSig){pnSig=sg;S.pnotes=d;return}if(sg===pnSig)return;
+      var ae=document.activeElement;if(ae&&app.contains(ae)&&/^(INPUT|TEXTAREA)$/.test(ae.tagName))return;
+      pnSig=sg;S.pnotes=d;render();
+    }).catch(function(){});
+  },window.KD_POLL||15000);
+}
 /* giocatori: la pagina si aggiorna da sola quando il Master rivela qualcosa */
 if(!ISOWNER){
   setInterval(function(){
