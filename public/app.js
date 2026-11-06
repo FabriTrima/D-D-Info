@@ -184,6 +184,11 @@ function ctl(coll,id,i,n){
     '<button class="btn small" data-act="mv" data-coll="'+coll+'" data-id="'+id+'" data-d="1" aria-label="Sposta giù"'+(i===n-1?' disabled':'')+'>Giù</button>'+
     '<button class="btn small danger" data-act="delitem" data-coll="'+coll+'" data-id="'+id+'">'+(armed===key?'Conferma eliminazione':'Elimina')+'</button></div>';
 }
+function houseBar(it){
+  if(!ISOWNER)return '';
+  var on=!!it.revealed;
+  return '<div class="ctl" style="margin:0 0 12px;align-items:center"><span class="secret" style="margin:0'+(on?';background:#2f6b3a':'')+'">'+(on?'Casata visibile ai giocatori':'Casata nascosta ai giocatori')+'</span><button class="btn small'+(on?' danger':' pri')+'" data-act="revhouse" data-id="'+it.id+'">'+(on?'Nascondi la casata':'Rivela la casata')+'</button></div>';
+}
 function photoBar(c,it){
   if(!ISOWNER||(c!=='guilds'&&c!=='council')||!photoSrc(it.photo))return '';
   var on=!!it.photoRevealed;
@@ -277,13 +282,13 @@ fin.addEventListener('change',function(){
 function houseHtml(it,i,n){
   if(!edit){
     var img=photoImg(it,'pt')||'<div class="pt empty" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor">'+ICON.guild+'</svg></div>';
-    return '<article class="house">'+img+'<div class="hb">'+photoBar('council',it)+'<p class="hk">'+esc(it.house)+'</p><h3>'+esc(it.name)+'</h3><p class="hr">'+esc(it.role)+(it.age?' · '+esc(it.age)+' anni':'')+'</p>'+
+    return '<article class="house">'+img+'<div class="hb">'+houseBar(it)+photoBar('council',it)+'<p class="hk">'+esc(it.house)+'</p><h3>'+esc(it.name)+'</h3><p class="hr">'+esc(it.role)+(it.age?' · '+esc(it.age)+' anni':'')+'</p>'+
       (it.domain?'<p class="dom"><span>Dominio</span>'+esc(it.domain)+'</p>':'')+
       '<p class="ht">'+esc(it.text)+'</p>'+(it.motto?'<p class="motto">«'+esc(it.motto)+'»</p>':'')+
       (it.notes?'<div class="mnote"><h4>Note del Master</h4><p>'+esc(it.notes)+'</p></div>':'')+'</div></article>';
   }
   var b='council|'+it.id+'|',q=it.id;
-  return '<div class="card dark">'+photoBar('council',it)+
+  return '<div class="card dark">'+houseBar(it)+photoBar('council',it)+
     '<div class="fld"><label for="n-'+q+'">Casata</label><input id="n-'+q+'" data-b="'+b+'house" value="'+esc(it.house)+'"></div>'+
     '<div class="row2"><div class="fld"><label for="cn-'+q+'">Nome del capocasata</label><input id="cn-'+q+'" data-b="'+b+'name" value="'+esc(it.name)+'"></div>'+
     '<div class="fld"><label for="ca-'+q+'">Età</label><input id="ca-'+q+'" inputmode="numeric" style="width:6em" data-b="'+b+'age" value="'+esc(it.age)+'"></div></div>'+
@@ -298,7 +303,7 @@ function councilView(){
   var n=S.council.length;
   return '<h2 class="sech" style="margin-top:0">Il Consiglio delle Pietre</h2>'+
     (edit?'<div class="fld dark" style="max-width:720px;margin-bottom:20px"><label for="ci">Introduzione</label><textarea id="ci" rows="3" data-b="|root|councilIntro" style="width:100%;padding:8px 10px;background:var(--ink-2);border:1px solid var(--line);color:var(--fg)">'+esc(S.councilIntro)+'</textarea></div>':(S.councilIntro?'<p class="lead">'+esc(S.councilIntro)+'</p>':''))+
-    (n?'<ul class="council">'+S.council.map(function(it,i){return '<li>'+houseHtml(it,i,n)+'</li>'}).join('')+'</ul>':'<p class="lead">Nessuna casata registrata.'+(edit?'':' Entra in modalità modifica per aggiungerne una.')+'</p>')+
+    (n?'<ul class="council">'+S.council.map(function(it,i){return '<li>'+houseHtml(it,i,n)+'</li>'}).join('')+'</ul>':'<p class="lead">'+(ISOWNER?'Nessuna casata registrata.'+(edit?'':' Entra in modalità modifica per aggiungerne una.'):'I membri del Consiglio non sono ancora noti.')+'</p>')+
     (edit?'<p style="margin-top:16px"><button class="btn" data-act="additem" data-coll="council">Aggiungi una casata</button></p>':'');
 }
 
@@ -476,6 +481,7 @@ function act(el,e){
   if(a==='csel'){csel=id;render();return}
   if(a==='photo'){if(uploading||!ASSETS)return;photoTarget={coll:coll,id:id};fin.value='';fin.click();return}
   if(a==='rmphoto'){var pit=byId(coll,id);if(pit){pit.photo=null;if(coll==='custodi')wMember(pit,true);else if(pit.hid)wHid(coll,pit,true);else setDirty();render()}return}
+  if(a==='revhouse'){var hh=byId('council',id);if(!hh||!ISOWNER)return;hh.revealed=!hh.revealed;setDirty();render();save();return}
   if(a==='togphoto'){var pt=byId(coll,id);if(!pt||!ISOWNER)return;pt.photoRevealed=!pt.photoRevealed;setDirty();render();save();return}
   if(a==='togmem'){var gg=byId('guilds',id),gm=gg&&(gg.members||[]).filter(function(x){return x.id===el.getAttribute('data-mid')})[0];if(!gm||!ISOWNER)return;gm.revealed=!gm.revealed;setDirty();render();save();return}
   if(a==='addmem'){var ag=byId('guilds',id);if(!ag||!ISOWNER)return;ag.members=ag.members||[];ag.members.push({id:uid('m'),name:'Nuovo membro',text:'',revealed:false});setDirty();render();return}

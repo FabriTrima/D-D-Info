@@ -8,7 +8,7 @@ const MAX_IMG = 5 * 1024 * 1024;
 export function publicView(S) {
   const P = JSON.parse(JSON.stringify(S));
   for (const c of NCOLL) {
-    P[c] = (P[c] || []).filter((it) => !(it.hid && !it.revealed));
+    P[c] = (P[c] || []).filter((it) => !(it.hid && !it.revealed)).filter((it) => c !== 'council' || it.revealed);
     P[c].forEach((it) => {
       delete it.notes; delete it.hid; delete it.revealed; delete it.notesRevealed;
       if ((c === 'guilds' || c === 'council') && !it.photoRevealed) delete it.photo;
