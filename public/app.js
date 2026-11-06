@@ -343,21 +343,19 @@ function notesView(){
      '<div class="fld"><label for="px-'+n.id+'">Testo</label><textarea id="px-'+n.id+'" rows="6" data-pn="'+n.id+'|text">'+esc(n.text)+'</textarea></div>'+
      '<button class="btn small danger" data-act="pndel" data-id="'+n.id+'">'+(armed==='pn:'+n.id?'Conferma eliminazione':'Elimina nota')+'</button></article>'}).join(''):'<p class="desc" style="margin-top:14px">Nessuna nota. Premi "Nuova nota" per iniziare.</p>')+'</section>';
 }
-/* note condivise dentro ogni scheda */
-var snT={};
-function snName(){try{return localStorage.getItem('kd-pname')||''}catch(e){return ''}}
+/* note condivise: una per elemento, modificabile da tutti */
+var snT={},noteMode=false;
 function snHtml(coll,id){
-  var k=coll+':'+id,L=(S.pnotes&&S.pnotes[k])||[];
-  return '<div class="mnote pnotes"><h4>Note dei giocatori</h4><p class="desc" style="margin:2px 0 8px">Condivise: le vedono e le modificano tutti.</p>'+
-   L.map(function(e){return '<div class="sn" style="margin:0 0 10px"><div class="desc" style="margin:0 0 3px"><b>'+esc(e.by||'Anonimo')+'</b></div>'+
-     '<textarea rows="3" aria-label="Nota di '+esc(e.by||'Anonimo')+'" style="width:100%;box-sizing:border-box" data-sn="'+k+'|'+e.id+'">'+esc(e.text)+'</textarea>'+
-     '<button class="btn small danger" data-act="sndel" data-k="'+k+'" data-id="'+e.id+'">'+(armed==='sn:'+e.id?'Conferma eliminazione':'Elimina nota')+'</button></div>'}).join('')+
-   '<div class="ctl" style="align-items:center">'+(ISOWNER?'':'<input type="text" maxlength="30" placeholder="Il tuo nome" aria-label="Il tuo nome" style="max-width:11em" data-pname="1" value="'+esc(snName())+'"> ')+
-   '<button class="btn small" data-act="snadd" data-k="'+k+'">Aggiungi nota</button></div></div>';
+  var k=coll+':'+id,e=S.pnotes&&S.pnotes[k],t=e&&e.text||'';
+  if(noteMode)return '<div class="mnote pnotes"><h4>Nota dei giocatori</h4><textarea rows="3" placeholder="Scrivi qui una nota, la vedono tutti..." aria-label="Nota condivisa" style="width:100%;box-sizing:border-box" data-sn="'+k+'">'+esc(t)+'</textarea></div>';
+  return t?'<div class="mnote pnotes"><h4>Nota dei giocatori</h4><p>'+esc(t)+'</p></div>':'';
 }
-function snPost(k,nid,body){
-  body.key=k;body.nid=nid;
-  return api('/api/pnote',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}).catch(function(){});
+function noteBar(){
+  if(tab==='note'||edit)return '';
+  return '<div class="ctl" style="margin:0 0 14px;align-items:center"><button class="btn small'+(noteMode?' pri':'')+'" data-act="notemode">'+(noteMode?'Fine note':'Aggiungi nota')+'</button>'+(noteMode?'<span class="desc" style="margin-left:8px">Scrivi dove vuoi: ogni elemento ha il suo spazio. Le note sono condivise con tutti e puoi modificare quelle esistenti.</span>':'')+'</div>';
+}
+function snPost(k,text){
+  return api('/api/pnote',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({key:k,text:text})}).catch(function(){});
 }
 function braceView(){
   var n=S.custodi.length,ed=edit&&ISOWNER;
@@ -389,7 +387,7 @@ function citDetail(){
   var a=byId('citAreas',csel);
   if(!a)return '<article class="parch"><p class="desc">Nessuna area registrata.'+(edit?'':' Entra in modalità modifica per aggiungerne una.')+'</p></article>';
   var i=S.citAreas.indexOf(a),n=S.citAreas.length;
-  if(!edit)return '<article class="parch">'+photoImg(a)+'<p class="kick">Area '+(i+1)+' di '+n+'</p><h2>'+esc(a.name)+'</h2><p class="desc">'+esc(a.text)+'</p></article>';
+  if(!edit)return '<article class="parch">'+photoImg(a)+'<p class="kick">Area '+(i+1)+' di '+n+'</p><h2>'+esc(a.name)+'</h2><p class="desc">'+esc(a.text)+'</p>'+snHtml('citAreas',a.id)+'</article>';
   var b='citAreas|'+a.id+'|';
   return '<article class="parch"><p class="kick">Modifica area '+(i+1)+' di '+n+'</p>'+
     '<div class="fld"><label for="ca-n">Nome</label><input id="ca-n" data-b="'+b+'name" value="'+esc(a.name)+'"></div>'+
@@ -454,7 +452,7 @@ function render(){
   var y=window.scrollY;
   ensureSel();
   var v=tab==='societa'?societyView():tab==='consiglio'?councilView():tab==='gilde'?guildView():tab==='brace'?braceView():tab==='note'?notesView():tab==='cittadella'?citView():mapView();
-  app.innerHTML='<div class="wrap">'+headerHtml()+tabsHtml()+'<main role="tabpanel" aria-labelledby="tab-'+tab+'">'+v+'</main>'+footHtml()+'</div><div class="bar" id="bar" hidden></div>';
+  app.innerHTML='<div class="wrap">'+headerHtml()+tabsHtml()+'<main role="tabpanel" aria-labelledby="tab-'+tab+'">'+noteBar()+v+'</main>'+footHtml()+'</div><div class="bar" id="bar" hidden></div>';
   renderBar();
   window.scrollTo(0,y);
 }
@@ -502,8 +500,7 @@ function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function act(el,e){
   var a=el.getAttribute('data-act'),id=el.getAttribute('data-id'),coll=el.getAttribute('data-coll');
   if(a==='tab'){location.hash=id;return}
-  if(a==='snadd'){var k0=el.getAttribute('data-k'),nid=uid('e').replace(/[^A-Za-z0-9]/g,'');S.pnotes=S.pnotes||{};(S.pnotes[k0]=S.pnotes[k0]||[]).push({id:nid,by:ISOWNER?'Master':(snName()||'Anonimo'),text:''});snPost(k0,nid,{text:'',by:snName()});render();var ta=document.querySelector('[data-sn="'+k0+'|'+nid+'"]');if(ta)ta.focus();return}
-  if(a==='sndel'){var k1=el.getAttribute('data-k');if(armed==='sn:'+id){S.pnotes[k1]=(S.pnotes[k1]||[]).filter(function(e){return e.id!==id});armed=null;snPost(k1,id,{del:true})}else armed='sn:'+id;render();return}
+  if(a==='notemode'){noteMode=!noteMode;render();return}
   if(a==='pnadd'){PN.unshift({id:uid('n'),title:'',text:''});pnSave();render();return}
   if(a==='pndel'){if(armed==='pn:'+id){PN=PN.filter(function(n){return n.id!==id});armed=null;pnSave()}else armed='pn:'+id;render();return}
   if(a==='pndl'){var tx=PN.map(function(n){return (n.title||'Senza titolo')+'\n'+n.text}).join('\n\n----\n\n');var bl=new Blob([tx],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(bl),l=document.createElement('a');l.href=u;l.download='le-mie-note.txt';document.body.appendChild(l);l.click();l.remove();setTimeout(function(){URL.revokeObjectURL(u)},1000);return}
@@ -562,9 +559,8 @@ app.addEventListener('keydown',function(e){
 app.addEventListener('input',function(e){
   var t=e.target,b=t.getAttribute&&t.getAttribute('data-b');
   var pn=t.getAttribute&&t.getAttribute('data-pn');
-  if(t.getAttribute&&t.getAttribute('data-pname')){try{localStorage.setItem('kd-pname',t.value.trim().slice(0,30))}catch(x){}return}
   var sn=t.getAttribute&&t.getAttribute('data-sn');
-  if(sn){var w=sn.split('|'),L1=(S.pnotes&&S.pnotes[w[0]])||[],e1=L1.filter(function(x){return x.id===w[1]})[0];if(e1){e1.text=t.value;clearTimeout(snT[sn]);snT[sn]=setTimeout(function(){snPost(w[0],w[1],{text:e1.text,by:snName()})},600)}return}
+  if(sn){S.pnotes=S.pnotes||{};S.pnotes[sn]={text:t.value};clearTimeout(snT[sn]);snT[sn]=setTimeout(function(){snPost(sn,t.value)},600);return}
   if(pn){var q=pn.split('|'),n0=PN.filter(function(x){return x.id===q[0]})[0];if(n0){n0[q[1]]=t.value;pnLater()}return}
   if(!b)return;
   var p=b.split('|'),c=p[0],id=p[1],f=p[2],v=t.type==='checkbox'?t.checked:t.value;
