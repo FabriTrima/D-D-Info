@@ -447,7 +447,7 @@ function headerHtml(){
 function tabsHtml(){
   return '<nav class="tabs" role="tablist" aria-label="Sezioni">'+TABS.filter(tabVisible).map(function(t){
     return '<button class="tab" role="tab" id="tab-'+t+'" aria-selected="'+(tab===t)+'" data-act="tab" data-id="'+t+'">'+TABNAME[t]+'</button>';
-  }).join('')+'<span class="sp"></span>'+(ISOWNER?'<button class="btn" data-act="import">Importa dati</button> <button class="btn'+(edit?' on':'')+'" data-act="edit" aria-pressed="'+edit+'">'+(edit?'Esci dalla modifica':'Modifica')+'</button>':'')+'</nav>';
+  }).join('')+'<span class="sp"></span>'+(ISOWNER?'<a class="btn" href="/zhar-khazad/master" style="text-decoration:none" title="Apri la pagina Master della città degli azer">Zhar-Khazad ↗</a> <button class="btn" data-act="import">Importa dati</button> <button class="btn'+(edit?' on':'')+'" data-act="edit" aria-pressed="'+edit+'">'+(edit?'Esci dalla modifica':'Modifica')+'</button>':'')+'</nav>';
 }
 function footHtml(){
   return '<footer style="margin-top:40px;padding-top:18px;border-top:1px solid var(--line);text-align:center"><p style="font-family:var(--f-display);letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin:0;font-size:.95rem">'+(edit?'':esc(S.motto))+'</p>'+
