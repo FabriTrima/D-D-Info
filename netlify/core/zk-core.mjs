@@ -32,11 +32,19 @@ function json(obj, status = 200) {
   });
 }
 function digest(s) { return createHash('sha256').update(String(s)).digest(); }
+function same(a, b) { return timingSafeEqual(digest(a), digest(b)); }
+/* La password arriva codificata (accenti e simboli inclusi); spazi iniziali/finali ignorati. */
 function authed(req, env) {
   const pw = env('MASTER_PASSWORD');
   if (!pw) return 'noconfig';
-  const k = req.headers.get('x-master-key') || '';
-  return timingSafeEqual(digest(k), digest(pw)) ? 'ok' : 'bad';
+  const cands = [];
+  const enc = req.headers.get('x-master-key-enc');
+  if (enc) { try { cands.push(decodeURIComponent(enc)); } catch (e) {} }
+  const raw = req.headers.get('x-master-key');
+  if (raw) cands.push(raw);
+  const want = [String(pw), String(pw).trim()];
+  for (const c of cands) for (const w of want) if (same(c, w) || same(c.trim(), w)) return 'ok';
+  return 'bad';
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -50,6 +58,8 @@ export async function handle(req, store, env) {
   const url = new URL(req.url);
   const path = url.pathname.replace(/^\/zk-api\/?/, '').replace(/\/$/, '');
   const m = req.method;
+
+  if (path === 'stato' && m === 'GET') return json({ ok: true, password: !!env('MASTER_PASSWORD') });
 
   if (path === 'public' && m === 'GET') return json(publicView(await getState(store)));
 

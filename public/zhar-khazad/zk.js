@@ -75,7 +75,7 @@ var MODE=window.ZK_MODE==='master'?'master':'player';
 function sGet(k){try{return sessionStorage.getItem(k)}catch(e){return null}}
 function sSet(k,v){try{if(v==null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v)}catch(e){}}
 var KEY=sGet('zk-key')||'',saving=false,again=false,lastPub='';
-function api(path,opt){opt=opt||{};opt.headers=Object.assign({'x-master-key':KEY},opt.headers||{});opt.cache='no-store';return fetch(path,opt)}
+function api(path,opt){opt=opt||{};opt.headers=Object.assign({'x-master-key-enc':encodeURIComponent(String(KEY).trim())},opt.headers||{});opt.cache='no-store';return fetch(path,opt)}
 function status(t,err){stMsg=t;stErr=!!err;renderBar()}
 function saveAll(now){
   if(!ISOWNER||!S.meta)return;
@@ -103,15 +103,24 @@ window.addEventListener('beforeunload',function(e){if(TM.all||saving){e.preventD
 
 /* ---------- caricamento ---------- */
 function showLogin(text){
-  app.innerHTML='<div class="center"><h1>Zhar-Khazad</h1><p>Area riservata al Master.</p><form id="lg" class="fld" style="text-align:left;max-width:340px;margin:24px auto 0"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required><p style="color:#ffb08a;margin:6px 0 0">'+esc(text||'')+'</p><p style="margin-top:12px"><button class="btn pri" type="submit">Entra</button></p></form></div>';
-  $('#lg').addEventListener('submit',function(e){e.preventDefault();KEY=$('#pw').value;sSet('zk-key',KEY);init()});
+  app.innerHTML='<div class="center"><h1>Zhar-Khazad</h1><p>Area riservata al Master. La password è la stessa del Master di Karak-Dûran.</p><form id="lg" class="fld" style="text-align:left;max-width:340px;margin:24px auto 0"><label for="pw">Password</label><input id="pw" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required>'+
+    '<label style="display:flex;gap:8px;align-items:center;margin-top:8px;text-transform:none;letter-spacing:0;font-family:var(--f-body);font-size:.95rem"><input type="checkbox" id="pwshow" style="width:auto"> Mostra la password</label>'+
+    '<p id="lgmsg" style="color:#ffb08a;margin:6px 0 0">'+esc(text||'')+'</p><p style="margin-top:12px"><button class="btn pri" type="submit">Entra</button></p></form></div>';
+  $('#pwshow').addEventListener('change',function(){$('#pw').type=this.checked?'text':'password'});
+  $('#lg').addEventListener('submit',function(e){e.preventDefault();KEY=$('#pw').value.trim();sSet('zk-key',KEY);var mm=$('#lgmsg');if(mm)mm.textContent='Verifica in corso...';init()});
+  fetch('/zk-api/stato',{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(d){
+    var mm=$('#lgmsg');if(!mm)return;
+    if(!d)mm.textContent='Il server di Zhar-Khazad non risponde: il sito forse non ha ancora finito di aggiornarsi su Netlify.';
+    else if(!d.password)mm.textContent='Sul sito manca la variabile MASTER_PASSWORD (Netlify → Site configuration → Environment variables).';
+  }).catch(function(){});
   var p=$('#pw');if(p)p.focus();
 }
 function init(){
   if(MODE==='master'){
     if(!KEY){showLogin('');return}
     api('/zk-api/master/data').then(function(r){
-      if(r.status===401){sSet('zk-key',null);KEY='';showLogin('Password errata.');return null}
+      if(r.status===401){sSet('zk-key',null);KEY='';showLogin('Password errata: il server l\'ha confrontata con MASTER_PASSWORD e non corrisponde. Spunta "Mostra la password" per controllare cosa hai scritto.');return null}
+      if(r.status===404){showLogin('Il server di Zhar-Khazad non risponde: il sito forse non ha ancora finito di aggiornarsi su Netlify.');return null}
       if(r.status===503){showLogin('Sul sito manca la variabile MASTER_PASSWORD (Netlify → Site configuration → Environment variables).');return null}
       if(!r.ok)throw new Error('http');
       return r.json();
